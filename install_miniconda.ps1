@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 
 $SCRIPT_VERSION = "1.0.0"
 $MIRROR_BASE_URL = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
-$DEFAULT_INSTALL_PATH = Join-Path $env:USERPROFILE "miniconda3"
+$DEFAULT_INSTALL_PATH = "C:\ProgramData\miniconda3"
 $LOCAL_INSTALLER = Join-Path $env:TEMP "Miniconda3-latest-installer.exe"
 $TOTAL_STEPS = 5
 
@@ -34,7 +34,7 @@ Install Miniconda (latest) from Tsinghua mirror.
 
 Options:
   -Force       Skip checks for existing conda and install path
-  -Path PATH   Custom installation path (default: %USERPROFILE%\miniconda3)
+  -Path PATH   Custom installation path (default: C:\ProgramData\miniconda3)
   -DryRun      Print detection info and download URL without executing
   -Clean       Remove downloaded installer file and exit
   -Help        Show this help message

@@ -3,7 +3,7 @@ set -euo pipefail
 
 readonly SCRIPT_VERSION="1.0.0"
 readonly MIRROR_BASE_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
-readonly DEFAULT_INSTALL_PATH="${HOME}/miniconda3"
+readonly DEFAULT_INSTALL_PATH="/opt/miniconda3"
 readonly LOCAL_INSTALLER="/tmp/Miniconda3-latest-installer.sh"
 readonly TOTAL_STEPS=5
 
@@ -36,7 +36,7 @@ Install Miniconda (latest) from Tsinghua mirror.
 
 Options:
   --force       Skip checks for existing conda and install path
-  --path PATH   Custom installation path (default: \$HOME/miniconda3)
+  --path PATH   Custom installation path (default: /opt/miniconda3)
   --dry-run     Print detection info and download URL without executing
   --clean       Remove downloaded installer file and exit
   --help        Show this help message
