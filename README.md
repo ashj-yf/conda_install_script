@@ -9,16 +9,32 @@
 - 静默安装（非交互式），一键完成
 - 安装后自动执行 `conda init` 并配置清华镜像源（`~/.condarc`）
 
+## 注意事项
+
+### 权限要求
+
+默认安装路径需要相应的写入权限：
+
+- **Linux / macOS** (`/opt/miniconda3`)：需要 `sudo` 权限，或确保 `/opt` 目录有写入权限
+  ```bash
+  # 普通用户可能需要使用 sudo
+  sudo bash install_miniconda.sh
+  ```
+
+- **Windows** (`C:\ProgramData\miniconda3`)：需要以管理员身份运行 PowerShell
+
+如果你没有管理员权限，可以使用 `--path`（Linux/macOS）或 `-Path`（Windows）参数指定用户目录下的路径，例如 `~/miniconda3` 或 `$env:USERPROFILE\miniconda3`。
+
 ## 使用方法
 
 ### Linux / macOS
 
 ```bash
-# 基本安装（默认路径 ~/miniconda3）
+# 基本安装（默认路径 /opt/miniconda3，需要 sudo 或 /opt 目录有写入权限）
 bash install_miniconda.sh
 
 # 自定义安装路径
-bash install_miniconda.sh --path /opt/miniconda3
+bash install_miniconda.sh --path ~/miniconda3
 
 # 预览检测信息和下载地址（不实际执行）
 bash install_miniconda.sh --dry-run
@@ -33,11 +49,11 @@ bash install_miniconda.sh --force
 ### Windows (PowerShell)
 
 ```powershell
-# 基本安装（默认路径 %USERPROFILE%\miniconda3）
+# 基本安装（默认路径 C:\ProgramData\miniconda3，需要管理员权限）
 .\install_miniconda.ps1
 
 # 自定义安装路径
-.\install_miniconda.ps1 -Path "C:\miniconda3"
+.\install_miniconda.ps1 -Path "$env:USERPROFILE\miniconda3"
 
 # 预览（不实际执行）
 .\install_miniconda.ps1 -DryRun
@@ -56,7 +72,7 @@ bash install_miniconda.sh --force
 | 参数 | 说明 |
 |------|------|
 | `--force` | 跳过已有 conda 和安装路径已存在的检查 |
-| `--path PATH` | 自定义安装路径（默认 `$HOME/miniconda3`） |
+| `--path PATH` | 自定义安装路径（默认 `/opt/miniconda3`） |
 | `--dry-run` | 仅打印检测信息和下载 URL，不实际执行 |
 | `--clean` | 清除已下载的安装包并退出 |
 | `--help` | 显示帮助信息 |
@@ -69,7 +85,7 @@ bash install_miniconda.sh --force
 | 参数 | 说明 |
 |------|------|
 | `-Force` | 跳过已有 conda 和安装路径已存在的检查 |
-| `-Path PATH` | 自定义安装路径（默认 `%USERPROFILE%\miniconda3`） |
+| `-Path PATH` | 自定义安装路径（默认 `C:\ProgramData\miniconda3`） |
 | `-DryRun` | 仅打印检测信息和下载 URL，不实际执行 |
 | `-Clean` | 清除已下载的安装包并退出 |
 | `-Help` | 显示帮助信息 |
