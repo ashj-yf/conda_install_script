@@ -78,7 +78,7 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.
 
 ## Windows 开发环境一键安装
 
-一次性安装 **Chrome + Java 21 + Miniconda**，并自动配置环境变量。
+一次性安装 **Chrome + Java 21 + Git + Miniconda**，并自动配置环境变量。
 
 ### GitHub
 
@@ -118,6 +118,7 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 |------|------|----------|
 | Chrome | 最新稳定版 | 默认安装位置 |
 | Java (OpenJDK) | 21.0.2 | `C:\ProgramData\Java\jdk-21` |
+| Git | 2.47.1 | `C:\ProgramData\Git` |
 | Miniconda | latest | `C:\ProgramData\miniconda3` |
 
 ### 参数说明

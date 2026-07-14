@@ -11,9 +11,13 @@ $ErrorActionPreference = "Stop"
 # Java 下载地址（可在此处修改，或通过环境变量覆盖）
 $env:JAVA_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/openjdk/21.0.2/openjdk-21.0.2_windows-x64_bin.zip"
 
+# Git 下载地址（华为镜像）
+$GIT_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/git-for-windows/git-2.47.1.windows.1-64-bit.exe"
+
 # 安装路径
 $JAVA_INSTALL_PATH = "C:\ProgramData\Java\jdk-21"
 $MINICONDA_INSTALL_PATH = $env:CONDA_INSTALL_PATH, "C:\ProgramData\miniconda3" | Select-Object -First 1
+$GIT_INSTALL_PATH = "C:\ProgramData\Git"
 
 # Miniconda 远程脚本地址
 $GITHUB_MINICONDA_URL = "https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1"
@@ -26,8 +30,9 @@ $JAVA_ZIP = Join-Path $TEMP_DIR "openjdk-21.0.2_windows-x64_bin.zip"
 $MINICONDA_SCRIPT = Join-Path $TEMP_DIR "install_miniconda.ps1"
 $DEV_ENV_SCRIPT = $MyInvocation.MyCommand.Path
 $CHROME_SETUP = Join-Path $TEMP_DIR "ChromeSetup.exe"
+$GIT_SETUP = Join-Path $TEMP_DIR "GitSetup.exe"
 
-$TOTAL_STEPS = 5
+$TOTAL_STEPS = 6
 # ==================== 配置结束 ====================
 
 # --- 日志函数 ---
@@ -46,6 +51,12 @@ function Remove-TempFiles {
     if (Test-Path $CHROME_SETUP) {
         Remove-Item $CHROME_SETUP -Force -ErrorAction SilentlyContinue
         Write-Info "已删除: $CHROME_SETUP"
+    }
+
+    # 清理 Git 安装包
+    if (Test-Path $GIT_SETUP) {
+        Remove-Item $GIT_SETUP -Force -ErrorAction SilentlyContinue
+        Write-Info "已删除: $GIT_SETUP"
     }
 
     # 清理 Java ZIP
@@ -206,10 +217,29 @@ try {
     Write-Warn "Java 验证失败，请重新打开终端"
 }
 
+# 步骤 5: 安装 Git
 # ===========================================
-# 步骤 5: 安装 Miniconda
+Write-Step 5 "安装 Git"
+try {
+    if (Get-Command git -ErrorAction SilentlyContinue) {
+        $gitVersion = & git --version 2>&1
+        Write-Info "Git 已安装: $gitVersion"
+    } else {
+        Write-Info "正在下载 Git 安装程序..."
+        Invoke-WebRequest -Uri $GIT_DOWNLOAD_URL -OutFile $GIT_SETUP -UseBasicParsing
+        Write-Info "正在安装 Git（静默模式）..."
+        Start-Process $GIT_SETUP -ArgumentList "/VERYSILENT", "/NORESTART", "/NOCANCEL", "/SP-", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/COMPONENTS=`"icons,extreg`"" -Wait
+        Write-Info "Git 安装完成"
+    }
+} catch {
+    Write-Warn "Git 安装失败: $_"
+    Write-Info "请手动下载安装: https://git-scm.com/download/win"
+}
+
 # ===========================================
-Write-Step 5 "安装 Miniconda"
+# 步骤 6: 安装 Miniconda
+# ===========================================
+Write-Step 6 "安装 Miniconda"
 
 if (Get-Command conda -ErrorAction SilentlyContinue) {
     Write-Info "Miniconda/Conda 已安装，跳过"
