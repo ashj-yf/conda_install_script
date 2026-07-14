@@ -24,6 +24,8 @@ $MINICONDA_SCRIPT_URL = if ($Mirror -eq "github") { $GITHUB_MINICONDA_URL } else
 $TEMP_DIR = $env:TEMP
 $JAVA_ZIP = Join-Path $TEMP_DIR "openjdk-21.0.2_windows-x64_bin.zip"
 $MINICONDA_SCRIPT = Join-Path $TEMP_DIR "install_miniconda.ps1"
+$DEV_ENV_SCRIPT = $MyInvocation.MyCommand.Path
+$CHROME_SETUP = Join-Path $TEMP_DIR "ChromeSetup.exe"
 
 $TOTAL_STEPS = 5
 # ==================== 配置结束 ====================
@@ -34,6 +36,41 @@ function Write-Warn($msg) { Write-Host "[WARN] $msg" -ForegroundColor Yellow }
 function Write-Err($msg) { Write-Host "[ERROR] $msg" -ForegroundColor Red }
 function Die($msg) { Write-Err $msg; exit 1 }
 function Write-Step($n, $msg) { Write-Host ""; Write-Host "[$n/$TOTAL_STEPS] " -ForegroundColor Cyan -NoNewline; Write-Host $msg -ForegroundColor White -NoNewline; Write-Host " ..." }
+
+# --- 清理函数 ---
+function Remove-TempFiles {
+    Write-Host "" -NoNewline
+    Write-Info "正在清理临时文件..."
+
+    # 清理 Chrome 安装包
+    if (Test-Path $CHROME_SETUP) {
+        Remove-Item $CHROME_SETUP -Force -ErrorAction SilentlyContinue
+        Write-Info "已删除: $CHROME_SETUP"
+    }
+
+    # 清理 Java ZIP
+    if (Test-Path $JAVA_ZIP) {
+        Remove-Item $JAVA_ZIP -Force -ErrorAction SilentlyContinue
+        Write-Info "已删除: $JAVA_ZIP"
+    }
+
+    # 清理 Miniconda 安装脚本
+    if (Test-Path $MINICONDA_SCRIPT) {
+        Remove-Item $MINICONDA_SCRIPT -Force -ErrorAction SilentlyContinue
+        Write-Info "已删除: $MINICONDA_SCRIPT"
+    }
+
+    # 清理自身（如果是远程下载的脚本）
+    if ($DEV_ENV_SCRIPT -ne "" -and $DEV_ENV_SCRIPT -notlike "*:\*\*") {
+        # 只有当脚本在临时目录时才删除
+        if ($DEV_ENV_SCRIPT.StartsWith($TEMP_DIR)) {
+            Remove-Item $DEV_ENV_SCRIPT -Force -ErrorAction SilentlyContinue
+            Write-Info "已删除: $DEV_ENV_SCRIPT"
+        }
+    }
+
+    Write-Info "清理完成"
+}
 
 # --- 环境变量操作 ---
 function Add-ToSystemPath {
@@ -79,11 +116,10 @@ try {
         Write-Info "Chrome 已安装（命令行可用）"
     } else {
         Write-Info "正在下载 Chrome 安装程序..."
-        $chromeSetup = Join-Path $TEMP_DIR "ChromeSetup.exe"
+        $chromeSetup = $CHROME_SETUP
         Invoke-WebRequest -Uri "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $chromeSetup -UseBasicParsing
         Write-Info "正在安装 Chrome（静默模式）..."
         Start-Process $chromeSetup -ArgumentList "/silent /install" -Wait
-        Remove-Item $chromeSetup -Force -ErrorAction SilentlyContinue
         Write-Info "Chrome 安装完成"
     }
 } catch {
@@ -202,6 +238,17 @@ if (Test-Path $minicondaScripts) {
 # 完成
 # ===========================================
 Write-Host ""
+Write-Host "验证命令：" -ForegroundColor White
+Write-Host "  java --version" -ForegroundColor Cyan
+Write-Host "  conda --version" -ForegroundColor Cyan
+Write-Host "  conda info" -ForegroundColor Cyan
+Write-Host ""
+
+# 清理临时文件
+Remove-TempFiles
+
+# 完成后提示
+Write-Host ""
 Write-Host "========================================" -ForegroundColor Green
 Write-Host "  安装完成！" -ForegroundColor White
 Write-Host "========================================" -ForegroundColor Green
@@ -216,4 +263,3 @@ Write-Host "验证命令：" -ForegroundColor White
 Write-Host "  java --version" -ForegroundColor Cyan
 Write-Host "  conda --version" -ForegroundColor Cyan
 Write-Host "  conda info" -ForegroundColor Cyan
-Write-Host ""
