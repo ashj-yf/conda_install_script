@@ -76,6 +76,53 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.
 > [!TIP]
 > 可在命令后添加参数，例如 `--force`（跳过检查）、`--path ~/miniconda3`（自定义路径）等。
 
+## Windows 开发环境一键安装
+
+一次性安装 **Chrome + Java 21 + Miniconda**，并自动配置环境变量。
+
+### GitHub
+
+<details>
+<summary><b>点击查看命令</b></summary>
+
+```powershell
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 | iex
+```
+
+<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 | iex').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+</details>
+
+### Gitee（国内推荐）
+
+<details>
+<summary><b>点击查看命令</b></summary>
+
+```powershell
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex -Mirror gitee
+```
+
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex -Mirror gitee').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+</details>
+
+> [!NOTE]
+> 需要 **管理员权限** 运行 PowerShell。
+
+### 安装内容
+
+| 软件 | 版本 | 安装路径 |
+|------|------|----------|
+| Chrome | 最新稳定版 | 默认安装位置 |
+| Java (OpenJDK) | 21.0.2 | `C:\ProgramData\Java\jdk-21` |
+| Miniconda | latest | `C:\ProgramData\miniconda3` |
+
+### 参数说明
+
+| 参数 | 说明 |
+|------|------|
+| `-Mirror github` | 使用 GitHub 源（默认） |
+| `-Mirror gitee` | 使用 Gitee 源（国内推荐） |
+| `-DryRun` | 仅打印配置信息，不实际安装 |
+
 ## 使用方法
 
 ### Linux / macOS
