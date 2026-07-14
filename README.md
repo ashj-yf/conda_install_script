@@ -86,10 +86,10 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 | iex
 ```
 
-<p><button onclick="navigator.clipboard.writeText(&apos;irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText(&apos;irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 | iex&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 ### Gitee（国内推荐）
@@ -98,10 +98,10 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex
 ```
 
-<p><button onclick="navigator.clipboard.writeText(&apos;irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText(&apos;irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!NOTE]
