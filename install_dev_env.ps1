@@ -1,9 +1,6 @@
 #Requires -Version 5.1
 [CmdletBinding()]
-param(
-    [ValidateSet("github", "gitee")]
-    [string]$Mirror = "github"
-)
+param()
 
 $ErrorActionPreference = "Stop"
 
@@ -15,10 +12,8 @@ $env:JAVA_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/openjdk/21.0.2/openjdk
 $JAVA_INSTALL_PATH = "C:\ProgramData\Java\jdk-21"
 $MINICONDA_INSTALL_PATH = $env:CONDA_INSTALL_PATH, "C:\ProgramData\miniconda3" | Select-Object -First 1
 
-# Miniconda 远程脚本地址（根据镜像源选择）
-$GITHUB_MINICONDA_URL = "https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1"
-$GITEE_MINICONDA_URL = "https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1"
-$MINICONDA_SCRIPT_URL = if ($Mirror -eq "gitee") { $GITEE_MINICONDA_URL } else { $GITHUB_MINICONDA_URL }
+# Miniconda 远程脚本地址（默认使用 Gitee）
+$MINICONDA_SCRIPT_URL = "https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1"
 
 # 临时目录
 $TEMP_DIR = $env:TEMP
