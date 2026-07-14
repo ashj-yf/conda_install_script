@@ -86,10 +86,10 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 | iex
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1 -Mirror github
 ```
 
-<p><button onclick="navigator.clipboard.writeText(&apos;irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 | iex&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText(&apos;irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1 -Mirror github&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 ### Gitee（国内推荐）
@@ -124,6 +124,8 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 
 | 参数 | 说明 |
 |------|------|
+| `-Mirror github` | 使用 GitHub 源下载 Miniconda 安装脚本 |
+| `-Mirror gitee` | 使用 Gitee 源下载 Miniconda 安装脚本（默认） |
 | `-DryRun` | 仅打印配置信息，不实际安装 |
 
 ## 使用方法
