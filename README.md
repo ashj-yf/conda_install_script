@@ -31,17 +31,47 @@
 
 ### GitHub
 
-| 平台 | 命令 |
-|------|------|
-| Linux / macOS | `bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)` |
-| Windows (PowerShell) | `irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 \| iex` |
+<details>
+<summary><b>Linux / macOS</b></summary>
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)
+```
+
+<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+</details>
+
+<details>
+<summary><b>Windows (PowerShell)</b></summary>
+
+```powershell
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex
+```
+
+<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+</details>
 
 ### Gitee
 
-| 平台 | 命令 |
-|------|------|
-| Linux / macOS | `bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)` |
-| Windows (PowerShell) | `irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 \| iex` |
+<details>
+<summary><b>Linux / macOS</b></summary>
+
+```bash
+bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)
+```
+
+<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+</details>
+
+<details>
+<summary><b>Windows (PowerShell)</b></summary>
+
+```powershell
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex
+```
+
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+</details>
 
 > [!TIP]
 > 可在命令后添加参数，例如 `--force`（跳过检查）、`--path ~/miniconda3`（自定义路径）等。
