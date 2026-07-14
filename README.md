@@ -25,12 +25,33 @@
 
 如果你没有管理员权限，可以使用 `--path`（Linux/macOS）或 `-Path`（Windows）参数指定用户目录下的路径，例如 `~/miniconda3` 或 `$env:USERPROFILE\miniconda3`。
 
+## 一键安装（远程执行）
+
+直接从远程仓库下载并执行，无需克隆仓库。
+
+### GitHub
+
+| 平台 | 命令 |
+|------|------|
+| Linux / macOS | `bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)` |
+| Windows (PowerShell) | `irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 \| iex` |
+
+### Gitee
+
+| 平台 | 命令 |
+|------|------|
+| Linux / macOS | `bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)` |
+| Windows (PowerShell) | `irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 \| iex` |
+
+> [!TIP]
+> 可在命令后添加参数，例如 `--force`（跳过检查）、`--path ~/miniconda3`（自定义路径）等。
+
 ## 使用方法
 
 ### Linux / macOS
 
 ```bash
-# 基本安装（默认路径 /opt/miniconda3，需要 sudo 或 /opt 目录有写入权限）
+# 本地安装（默认路径 /opt/miniconda3，需要 sudo 或 /opt 目录有写入权限）
 bash install_miniconda.sh
 
 # 自定义安装路径
@@ -49,7 +70,7 @@ bash install_miniconda.sh --force
 ### Windows (PowerShell)
 
 ```powershell
-# 基本安装（默认路径 C:\ProgramData\miniconda3，需要管理员权限）
+# 本地安装（默认路径 C:\ProgramData\miniconda3，需要管理员权限）
 .\install_miniconda.ps1
 
 # 自定义安装路径
