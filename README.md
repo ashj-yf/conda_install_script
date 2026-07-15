@@ -1,35 +1,33 @@
 # conda_install_script
 
-从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。
+从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda）。
 
-## 功能
+## 功能特性
 
-- 自动检测操作系统和 CPU 架构，选择对应的安装包
-- 从清华大学开源软件镜像站下载，国内速度极快
-- 静默安装（非交互式），一键完成
-- 安装后自动执行 `conda init` 并配置清华镜像源（`~/.condarc`）
+- **自动检测**操作系统与 CPU 架构，自动选择对应安装包
+- **清华镜像源**下载，国内速度极快
+- **静默安装**（非交互式），一键完成
+- 安装后自动执行 `conda init` 并写入清华镜像源配置（`~/.condarc`）
+- Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda 并自动配置环境变量
 
-## 注意事项
+## 权限说明
 
-### 权限要求
+默认安装路径需要相应写入权限：
 
-默认安装路径需要相应的写入权限：
+| 平台 | 默认路径 | 权限要求 |
+|------|----------|----------|
+| Linux / macOS | `/opt/miniconda3` | `sudo` 权限，或 `/opt` 目录可写 |
+| Windows | `C:\ProgramData\miniconda3` | 管理员身份运行 PowerShell |
 
-- **Linux / macOS** (`/opt/miniconda3`)：需要 `sudo` 权限，或确保 `/opt` 目录有写入权限
-  ```bash
-  # 普通用户可能需要使用 sudo
-  sudo bash install_miniconda.sh
-  ```
+> 没有管理员权限时，可使用 `--path`（Linux/macOS）或 `-Path`（Windows）指定用户目录下的路径，例如 `~/miniconda3` 或 `$env:USERPROFILE\miniconda3`。
 
-- **Windows** (`C:\ProgramData\miniconda3`)：需要以管理员身份运行 PowerShell
+## 快速开始
 
-如果你没有管理员权限，可以使用 `--path`（Linux/macOS）或 `-Path`（Windows）参数指定用户目录下的路径，例如 `~/miniconda3` 或 `$env:USERPROFILE\miniconda3`。
+无需克隆仓库，直接远程下载并执行。
 
-## 一键安装（远程执行）
+### 安装 Miniconda
 
-直接从远程仓库下载并执行，无需克隆仓库。
-
-### GitHub
+#### GitHub 源
 
 <details>
 <summary><b>Linux / macOS</b></summary>
@@ -38,7 +36,7 @@
 bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)
 ```
 
-<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 <details>
@@ -48,10 +46,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script
 irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
-### Gitee
+#### Gitee 源（国内推荐）
 
 <details>
 <summary><b>Linux / macOS</b></summary>
@@ -60,7 +58,7 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)
 ```
 
-<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 <details>
@@ -70,17 +68,17 @@ bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/inst
 irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!TIP]
-> 可在命令后添加参数，例如 `--force`（跳过检查）、`--path ~/miniconda3`（自定义路径）等。
+> 可在命令后追加参数，例如 `--force`（跳过检查）、`--path ~/miniconda3`（自定义路径）等。详见下方[参数说明](#参数说明)。
 
-## Windows 开发环境一键安装
+### Windows 开发环境一键安装
 
 一次性安装 **Chrome + Java 21 + Git + Miniconda**，并自动配置环境变量。
 
-### GitHub
+#### GitHub 源
 
 <details>
 <summary><b>点击查看命令</b></summary>
@@ -89,10 +87,10 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.
 irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1 -Mirror github
 ```
 
-<p><button onclick="navigator.clipboard.writeText(&apos;irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1 -Mirror github&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1 -Mirror github').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
-### Gitee（国内推荐）
+#### Gitee 源（国内推荐）
 
 <details>
 <summary><b>点击查看命令</b></summary>
@@ -101,27 +99,27 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex
 ```
 
-<p><button onclick="navigator.clipboard.writeText(&apos;irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex&apos;).then(()=>this.textContent='已复制!').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!NOTE]
 > 需要 **管理员权限** 运行 PowerShell。
-> 
-> 如果遇到 `禁止运行脚本` 错误，请先执行：
+>
+> 如遇到 `禁止运行脚本` 错误，请先执行：
 > ```powershell
 > Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 > ```
 
-### 安装内容
+**安装内容**
 
 | 软件 | 版本 | 安装路径 |
 |------|------|----------|
 | Chrome | 最新稳定版 | 默认安装位置 |
 | Java (OpenJDK) | 21.0.2 | `C:\ProgramData\Java\jdk-21` |
-| Git | 2.47.1 | `C:\ProgramData\Git` |
+| Git | 2.47.1 | `C:\Program Files\Git` |
 | Miniconda | latest | `C:\ProgramData\miniconda3` |
 
-### 参数说明
+**参数说明**
 
 | 参数 | 说明 |
 |------|------|
@@ -129,7 +127,7 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 | `-Mirror gitee` | 使用 Gitee 源下载 Miniconda 安装脚本（默认） |
 | `-DryRun` | 仅打印配置信息，不实际安装 |
 
-## 使用方法
+## 本地使用
 
 ### Linux / macOS
 
@@ -171,7 +169,7 @@ bash install_miniconda.sh --force
 
 ## 参数说明
 
-### bash 脚本
+### install_miniconda.sh（Linux / macOS）
 
 | 参数 | 说明 |
 |------|------|
@@ -184,7 +182,7 @@ bash install_miniconda.sh --force
 
 支持环境变量 `CONDA_INSTALL_PATH` 覆盖默认安装路径。
 
-### PowerShell 脚本
+### install_miniconda.ps1（Windows）
 
 | 参数 | 说明 |
 |------|------|

@@ -2,7 +2,8 @@
 [CmdletBinding()]
 param(
     [ValidateSet("github", "gitee")]
-    [string]$Mirror = "gitee"
+    [string]$Mirror = "gitee",
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = "Stop"
