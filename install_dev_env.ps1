@@ -25,6 +25,11 @@ $GITHUB_MINICONDA_URL = "https://raw.githubusercontent.com/ashj-yf/conda_install
 $GITEE_MINICONDA_URL = "https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1"
 $MINICONDA_SCRIPT_URL = if ($Mirror -eq "github") { $GITHUB_MINICONDA_URL } else { $GITEE_MINICONDA_URL }
 
+# 本脚本自身的远程地址（用于 iex 管道方式自动提权时重新下载到临时文件）
+$GITHUB_DEV_ENV_URL = "https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1"
+$GITEE_DEV_ENV_URL = "https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1"
+$DEV_ENV_SCRIPT_URL = if ($Mirror -eq "github") { $GITHUB_DEV_ENV_URL } else { $GITEE_DEV_ENV_URL }
+
 # 临时目录
 $TEMP_DIR = $env:TEMP
 $JAVA_ZIP = Join-Path $TEMP_DIR "openjdk-21.0.2_windows-x64_bin.zip"
@@ -72,13 +77,10 @@ function Remove-TempFiles {
         Write-Info "已删除: $MINICONDA_SCRIPT"
     }
 
-    # 清理自身（如果是远程下载的脚本）
-    if ($DEV_ENV_SCRIPT -ne "" -and $DEV_ENV_SCRIPT -notlike "*:\*\*") {
-        # 只有当脚本在临时目录时才删除
-        if ($DEV_ENV_SCRIPT.StartsWith($TEMP_DIR)) {
-            Remove-Item $DEV_ENV_SCRIPT -Force -ErrorAction SilentlyContinue
-            Write-Info "已删除: $DEV_ENV_SCRIPT"
-        }
+    # 清理自身（仅当脚本位于临时目录时，即远程下载执行的情况）
+    if ($DEV_ENV_SCRIPT -and $DEV_ENV_SCRIPT.StartsWith($TEMP_DIR, [System.StringComparison]::OrdinalIgnoreCase)) {
+        Remove-Item $DEV_ENV_SCRIPT -Force -ErrorAction SilentlyContinue
+        Write-Info "已删除: $DEV_ENV_SCRIPT"
     }
 
     Write-Info "清理完成"
@@ -88,9 +90,12 @@ function Remove-TempFiles {
 function Add-ToSystemPath {
     param([string]$Path)
     $currentPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-    if ($currentPath -notlike "*;$Path;*") {
-        [Environment]::SetEnvironmentVariable("Path", "$currentPath;$Path", "Machine")
-        $script:needsPathRefresh = $true
+    # 两端补分号，确保能匹配到处于开头/结尾的条目，避免重复追加
+    if (";$currentPath;" -notlike "*;$Path;*") {
+        $newPath = if ($currentPath) { "$currentPath;$Path" } else { $Path }
+        [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
+        # 刷新当前会话 PATH，使后续命令能立即用到新路径
+        $env:Path = "$newPath;" + [Environment]::GetEnvironmentVariable("Path", "User")
         Write-Info "已添加到系统 PATH: $Path"
     } else {
         Write-Info "系统 PATH 已包含: $Path"
@@ -111,6 +116,42 @@ if ($DryRun) {
     Write-Host "Miniconda 脚本: $MINICONDA_SCRIPT_URL"
     Write-Host "Java ZIP: $JAVA_ZIP"
     exit 0
+}
+
+# 检查管理员权限，非管理员则自动提权（设置系统级环境变量需要写入 HKLM 注册表）
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Info "需要管理员权限，正在自动提权（请在 UAC 窗口点击「是」）..."
+
+    # 构造传递给提权进程的参数，保留用户传入的参数
+    $elevateArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit")
+    foreach ($key in $PSBoundParameters.Keys) {
+        $value = $PSBoundParameters[$key]
+        if ($value -is [switch]) {
+            if ($value.IsPresent) { $elevateArgs += "-$key" }
+        } else {
+            $elevateArgs += "-$key"
+            $elevateArgs += "`"$value`""
+        }
+    }
+
+    # 确定脚本文件路径：从文件运行则直接用；iex 管道方式则重新下载到临时文件
+    $scriptFile = $PSCommandPath
+    if (-not ($scriptFile -and (Test-Path $scriptFile))) {
+        $scriptFile = Join-Path $env:TEMP "install_dev_env.ps1"
+        Write-Info "正在下载脚本到临时文件以进行提权..."
+        Invoke-WebRequest -Uri $DEV_ENV_SCRIPT_URL -OutFile $scriptFile -UseBasicParsing
+    }
+    $elevateArgs += "-File", "`"$scriptFile`""
+
+    try {
+        Start-Process -Verb RunAs -FilePath "powershell.exe" -ArgumentList $elevateArgs -Wait
+    } catch {
+        Write-Err "提权失败或被取消: $_"
+        Write-Host "请以管理员身份手动打开 PowerShell 后重新执行。" -ForegroundColor Yellow
+        exit 1
+    }
+    exit
 }
 
 # 刷新 PATH 以获取最新环境变量
@@ -242,8 +283,11 @@ try {
 # ===========================================
 Write-Step 6 "安装 Miniconda"
 
+$condaExe = Join-Path $MINICONDA_INSTALL_PATH "Scripts\conda.exe"
 if (Get-Command conda -ErrorAction SilentlyContinue) {
     Write-Info "Miniconda/Conda 已安装，跳过"
+} elseif (Test-Path $condaExe) {
+    Write-Info "Miniconda 已安装于 $MINICONDA_INSTALL_PATH（PATH 缺失），跳过安装"
 } else {
     Write-Info "正在下载安装脚本..."
     try {

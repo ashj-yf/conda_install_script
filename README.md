@@ -96,14 +96,14 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!NOTE]
-> 需要 **管理员权限** 运行 PowerShell。
+> 脚本会**自动提权**到管理员权限（运行时弹出 UAC 确认窗口，点击「是」即可），无需手动以管理员身份运行。
 >
 > 如遇到 `禁止运行脚本` 错误，请先执行：
 > ```powershell
