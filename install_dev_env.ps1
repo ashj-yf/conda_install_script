@@ -188,8 +188,12 @@ try {
         Write-Info "正在下载 Chrome 安装程序..."
         Invoke-WebRequest -Uri "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $CHROME_SETUP -UseBasicParsing
         Write-Info "正在安装 Chrome（静默模式）..."
-        Start-Process $CHROME_SETUP -ArgumentList "/silent /install" -Wait
-        Write-Info "Chrome 安装完成"
+        $chromeProc = Start-Process $CHROME_SETUP -ArgumentList "/silent /install" -Wait -PassThru
+        if ($chromeProc.ExitCode -ne 0) {
+            Write-Warn "Chrome 安装可能失败（退出码: $($chromeProc.ExitCode)）"
+        } else {
+            Write-Info "Chrome 安装完成"
+        }
     }
 } catch {
     Write-Warn "Chrome 安装失败: $_"
@@ -201,10 +205,12 @@ try {
 # ===========================================
 Write-Step 2 "下载 Java 21 (OpenJDK)"
 
-if (Test-Path $JAVA_INSTALL_PATH) {
-    Write-Info "Java 已存在: $JAVA_INSTALL_PATH，跳过下载"
+$javaExePath = Join-Path $JAVA_INSTALL_PATH "bin\java.exe"
+if (Test-Path $javaExePath) {
+    Write-Info "Java 已安装: $JAVA_INSTALL_PATH，跳过下载"
+} elseif ((Test-Path $JAVA_ZIP) -and (Get-Item $JAVA_ZIP).Length -gt 0) {
+    Write-Info "Java 安装包已缓存: $JAVA_ZIP"
 } else {
-    if (Test-Path $JAVA_ZIP) { Remove-Item $JAVA_ZIP -Force }
     Write-Info "下载地址: $env:JAVA_DOWNLOAD_URL"
     Write-Info "正在下载（可能需要几分钟）..."
     try {
@@ -220,7 +226,7 @@ if (Test-Path $JAVA_INSTALL_PATH) {
 # ===========================================
 Write-Step 3 "解压并安装 Java"
 
-if (Test-Path $JAVA_INSTALL_PATH) {
+if (Test-Path $javaExePath) {
     Write-Info "Java 已解压至: $JAVA_INSTALL_PATH"
 } else {
     Write-Info "正在解压到 $JAVA_INSTALL_PATH ..."
@@ -231,20 +237,25 @@ if (Test-Path $JAVA_INSTALL_PATH) {
             New-Item -ItemType Directory -Path $javaParent -Force | Out-Null
         }
 
+        # 记录解压前存在的目录，用于动态识别 ZIP 内的顶层目录名
+        $dirsBefore = @(Get-ChildItem $javaParent -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+
         # 解压 ZIP
-        Expand-Archive -Path $JAVA_ZIP -DestinationPath (Split-Path $JAVA_INSTALL_PATH -Parent) -Force
-        # 重命名为指定路径
-        $extractedFolder = Join-Path (Split-Path $JAVA_INSTALL_PATH -Parent) "jdk-21.0.2"
-        if ($extractedFolder -ne $JAVA_INSTALL_PATH -and (Test-Path $extractedFolder)) {
+        Expand-Archive -Path $JAVA_ZIP -DestinationPath $javaParent -Force
+
+        # 动态识别 ZIP 解压出的顶层目录
+        $dirsAfter = @(Get-ChildItem $javaParent -Directory -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+        $newDirName = $dirsAfter | Where-Object { $dirsBefore -notcontains $_ } | Select-Object -First 1
+        $extractedFolder = if ($newDirName) { Join-Path $javaParent $newDirName } else { $null }
+
+        if ($extractedFolder -and (Test-Path $extractedFolder) -and $extractedFolder -ne $JAVA_INSTALL_PATH) {
             Move-Item -Path $extractedFolder -Destination $JAVA_INSTALL_PATH -Force
         }
         Write-Info "解压完成"
     } catch {
         Die "Java 解压失败: $_"
-    } finally {
-        # 清理 ZIP
-        if (Test-Path $JAVA_ZIP) { Remove-Item $JAVA_ZIP -Force -ErrorAction SilentlyContinue }
     }
+    # Keep ZIP for cache reuse on re-run; temp dir cleanup handles it eventually
 }
 
 # ===========================================
@@ -290,11 +301,19 @@ try {
         $gitVersion = & $gitCmd --version 2>&1
         Write-Info "Git 已安装: $gitVersion"
     } else {
-        Write-Info "正在下载 Git 安装程序..."
-        Invoke-WebRequest -Uri $GIT_DOWNLOAD_URL -OutFile $GIT_SETUP -UseBasicParsing
+        if ((Test-Path $GIT_SETUP) -and (Get-Item $GIT_SETUP).Length -gt 0) {
+            Write-Info "Git 安装包已缓存: $GIT_SETUP"
+        } else {
+            Write-Info "正在下载 Git 安装程序..."
+            Invoke-WebRequest -Uri $GIT_DOWNLOAD_URL -OutFile $GIT_SETUP -UseBasicParsing
+        }
         Write-Info "正在安装 Git（静默模式）..."
-        Start-Process $GIT_SETUP -ArgumentList "/VERYSILENT", "/NORESTART", "/NOCANCEL", "/SP-", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/COMPONENTS=`"icons,extreg`"" -Wait
-        Write-Info "Git 安装完成"
+        $gitProc = Start-Process $GIT_SETUP -ArgumentList "/VERYSILENT", "/NORESTART", "/NOCANCEL", "/SP-", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/COMPONENTS=`"icons,extreg`"" -Wait -PassThru
+        if ($gitProc.ExitCode -ne 0) {
+            Write-Warn "Git 安装可能失败（退出码: $($gitProc.ExitCode)）"
+        } else {
+            Write-Info "Git 安装完成"
+        }
     }
 } catch {
     Write-Warn "Git 安装失败: $_"
@@ -312,16 +331,20 @@ if (Get-Command conda -ErrorAction SilentlyContinue) {
 } elseif (Test-Path $condaExe) {
     Write-Info "Miniconda 已安装于 $MINICONDA_INSTALL_PATH（PATH 缺失），跳过安装"
 } else {
-    Write-Info "正在下载安装脚本..."
-    try {
+    if ((Test-Path $MINICONDA_SCRIPT) -and (Get-Item $MINICONDA_SCRIPT).Length -gt 0) {
+        Write-Info "Miniconda 安装脚本已缓存: $MINICONDA_SCRIPT"
+    } else {
+        Write-Info "正在下载安装脚本..."
         Invoke-WebRequest -Uri $MINICONDA_SCRIPT_URL -OutFile $MINICONDA_SCRIPT -UseBasicParsing
-        Write-Info "正在安装 Miniconda（静默模式）..."
+    }
+    Write-Info "正在安装 Miniconda（静默模式）..."
+    try {
         # 执行安装脚本（子进程 + Bypass 绕过执行策略；子进程 exit 不影响本进程）
         & powershell.exe -ExecutionPolicy Bypass -NoProfile -File $MINICONDA_SCRIPT -Path $MINICONDA_INSTALL_PATH
         if ($LASTEXITCODE -ne 0) { throw "Miniconda 安装脚本退出码: $LASTEXITCODE" }
     } catch {
         Write-Warn "Miniconda 安装失败: $_"
-        Write-Info "请手动运行: irm $MINICONDA_SCRIPT_URL -OutFile `$env:TEMP\install_miniconda.ps1; & `$env:TEMP\install_miniconda.ps1"
+        Write-Info "请手动运行: irm $MINICONDA_SCRIPT_URL -OutFile `$env:TEMP\install_miniconda.ps1; powershell -ExecutionPolicy Bypass -File `$env:TEMP\install_miniconda.ps1"
     } finally {
         if (Test-Path $MINICONDA_SCRIPT) { Remove-Item $MINICONDA_SCRIPT -Force -ErrorAction SilentlyContinue }
     }

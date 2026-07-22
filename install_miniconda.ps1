@@ -94,23 +94,38 @@ Write-Info "OS: ${CONDA_OS}  |  Arch: ${CONDA_ARCH}  |  Installer: ${INSTALLER_F
 # ============================================================
 Write-Step 2 $TOTAL_STEPS "Running pre-flight checks..."
 
-# Check existing conda
+# Check existing conda (anywhere in PATH, or at target install path)
+$CONDA_ALREADY_INSTALLED = $false
 $existingConda = Get-Command conda -ErrorAction SilentlyContinue
+$targetCondaExe = Join-Path $INSTALL_PATH "Scripts\conda.exe"
+$targetCondaAlt = Join-Path $INSTALL_PATH "conda.exe"
+
 if ($existingConda) {
     $existingVer = try { & conda --version 2>$null } catch { "unknown" }
     if ($Force) {
         Write-Warn "Existing conda found ($existingVer at $($existingConda.Source)), but -Force is set. Continuing."
     } else {
-        Die "Conda is already installed ($existingVer at $($existingConda.Source)). Use -Force to override."
+        Write-Info "Conda is already installed ($existingVer at $($existingConda.Source)). Skipping install."
+        $CONDA_ALREADY_INSTALLED = $true
+    }
+} elseif ((Test-Path $targetCondaExe) -or (Test-Path $targetCondaAlt)) {
+    if ($Force) {
+        Write-Warn "Conda found at $INSTALL_PATH (not in PATH), but -Force is set. Continuing."
+    } else {
+        Write-Info "Conda found at $INSTALL_PATH (not in PATH). Skipping install."
+        $CONDA_ALREADY_INSTALLED = $true
     }
 }
 
-# Check install path
-if ((Test-Path $INSTALL_PATH) -and (Get-ChildItem $INSTALL_PATH -ErrorAction SilentlyContinue)) {
-    if ($Force) {
-        Write-Warn "Install path $INSTALL_PATH exists and is non-empty, but -Force is set. Continuing."
-    } else {
-        Die "Install path $INSTALL_PATH already exists and is non-empty. Use -Force to override."
+if (-not $CONDA_ALREADY_INSTALLED) {
+    # Check install path
+    if ((Test-Path $INSTALL_PATH) -and (Get-ChildItem $INSTALL_PATH -ErrorAction SilentlyContinue)) {
+        if ($Force) {
+            Write-Warn "Install path $INSTALL_PATH exists and is non-empty, but -Force is set. Continuing."
+        } else {
+            Write-Info "Install path $INSTALL_PATH exists and is non-empty. Skipping install."
+            $CONDA_ALREADY_INSTALLED = $true
+        }
     }
 }
 
@@ -146,36 +161,52 @@ if ($DryRun) {
     exit 0
 }
 
-Write-Info "Downloading from: $DOWNLOAD_URL"
-try {
-    # Use TLS 1.2 for modern HTTPS
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $LOCAL_INSTALLER -UseBasicParsing
-} catch {
-    Die "Download failed. URL: $DOWNLOAD_URL`nError: $_"
-}
+if ($CONDA_ALREADY_INSTALLED) {
+    Write-Info "Skipping download (conda already installed)."
+} elseif ((Test-Path $LOCAL_INSTALLER) -and (Get-Item $LOCAL_INSTALLER).Length -gt 0) {
+    Write-Info "Installer already cached: $LOCAL_INSTALLER"
+} else {
+    Write-Info "Downloading from: $DOWNLOAD_URL"
+    try {
+        # Use TLS 1.2 for modern HTTPS
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $LOCAL_INSTALLER -UseBasicParsing
+    } catch {
+        Die "Download failed. URL: $DOWNLOAD_URL`nError: $_"
+    }
 
-if (-not (Test-Path $LOCAL_INSTALLER) -or (Get-Item $LOCAL_INSTALLER).Length -eq 0) {
-    Die "Downloaded installer is empty. The download may have failed."
+    if (-not (Test-Path $LOCAL_INSTALLER) -or (Get-Item $LOCAL_INSTALLER).Length -eq 0) {
+        Die "Downloaded installer is empty. The download may have failed."
+    }
+    Write-Info "Download complete."
 }
-Write-Info "Download complete."
 
 # ============================================================
 # Step 4: Install Miniconda
 # ============================================================
 Write-Step 4 $TOTAL_STEPS "Installing Miniconda..."
 
-Write-Info "Install path: $INSTALL_PATH"
+if ($CONDA_ALREADY_INSTALLED) {
+    Write-Info "Skipping installation (conda already present)."
+} else {
+    # Double-check: conda may have been installed to target path by a prior run
+    $preCheckConda = Join-Path $INSTALL_PATH "Scripts\conda.exe"
+    if (-not (Test-Path $preCheckConda)) { $preCheckConda = Join-Path $INSTALL_PATH "conda.exe" }
+    if (Test-Path $preCheckConda) {
+        Write-Info "Conda already exists at $INSTALL_PATH. Skipping installation."
+    } else {
+        Write-Info "Install path: $INSTALL_PATH"
 
-# NSIS silent install: /S for silent, /D for install dir (must be last, no quotes)
-$installArgs = "/S /D=$INSTALL_PATH"
-try {
-    $proc = Start-Process -FilePath $LOCAL_INSTALLER -ArgumentList "/S","/D=$INSTALL_PATH" -Wait -PassThru
-    if ($proc.ExitCode -ne 0) {
-        Die "Miniconda installation failed with exit code $($proc.ExitCode)."
+        # NSIS silent install: /S for silent, /D for install dir (must be last, no quotes)
+        try {
+            $proc = Start-Process -FilePath $LOCAL_INSTALLER -ArgumentList "/S","/D=$INSTALL_PATH" -Wait -PassThru
+            if ($proc.ExitCode -ne 0) {
+                Die "Miniconda installation failed with exit code $($proc.ExitCode)."
+            }
+        } catch {
+            Die "Miniconda installation failed: $_"
+        }
     }
-} catch {
-    Die "Miniconda installation failed: $_"
 }
 
 # Verify installation
@@ -196,28 +227,42 @@ Write-Info "Miniconda $CONDA_VER installed successfully."
 # ============================================================
 Write-Step 5 $TOTAL_STEPS "Configuring conda..."
 
-# conda init
+# conda init (skip if profile already contains conda initialize block)
 Write-Info "Running conda init..."
+$psProfilePath = Join-Path $env:USERPROFILE "Documents\WindowsPowerShell\profile.ps1"
+$psProfileExists = (Test-Path $psProfilePath)
+$psHasCondInit = $psProfileExists -and ((Get-Content $psProfilePath -Raw) -match "#region conda initialize")
+$cmdHasCondInit = $false
+$cmdAutoRunKey = "HKCU:\Software\Microsoft\Command Processor"
 try {
-    & $condaExe init powershell 2>$null
-} catch {
-    Write-Warn "conda init powershell reported a warning."
-}
-try {
-    & $condaExe init cmd.exe 2>$null
-} catch {
-    Write-Warn "conda init cmd.exe reported a warning."
+    $cmdAutoRun = (Get-ItemProperty -Path $cmdAutoRunKey -Name "AutoRun" -ErrorAction SilentlyContinue).AutoRun
+    if ($cmdAutoRun -and $cmdAutoRun -match "conda") { $cmdHasCondInit = $true }
+} catch { }
+
+if (-not $psHasCondInit) {
+    try {
+        & $condaExe init powershell 2>$null
+        Write-Info "conda init powershell done."
+    } catch {
+        Write-Warn "conda init powershell reported a warning."
+    }
+} else {
+    Write-Info "PowerShell profile already has conda initialize block. Skipping."
 }
 
-# Write ~/.condarc with Tsinghua mirror
+if (-not $cmdHasCondInit) {
+    try {
+        & $condaExe init cmd.exe 2>$null
+        Write-Info "conda init cmd.exe done."
+    } catch {
+        Write-Warn "conda init cmd.exe reported a warning."
+    }
+} else {
+    Write-Info "CMD AutoRun already has conda initialize. Skipping."
+}
+
+# Write ~/.condarc with Tsinghua mirror (only if changed)
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
-if (Test-Path $CONDARC_PATH) {
-    $backup = "${CONDARC_PATH}.bak.$([int](Get-Date -UFormat %s))"
-    Copy-Item $CONDARC_PATH $backup
-    Write-Warn "Existing ~/.condarc backed up to $backup"
-}
-
-Write-Info "Writing Tsinghua mirror config to ~/.condarc..."
 $condarcContent = @"
 channels:
   - defaults
@@ -230,7 +275,22 @@ custom_channels:
   conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
   pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
 "@
-Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
+
+if (Test-Path $CONDARC_PATH) {
+    $existingContent = (Get-Content $CONDARC_PATH -Raw).Trim()
+    if ($existingContent -eq $condarcContent.Trim()) {
+        Write-Info "~/.condarc already up-to-date. Skipping."
+    } else {
+        $backup = "${CONDARC_PATH}.bak.$([int](Get-Date -UFormat %s))"
+        Copy-Item $CONDARC_PATH $backup
+        Write-Warn "Existing ~/.condarc backed up to $backup"
+        Write-Info "Writing Tsinghua mirror config to ~/.condarc..."
+        Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
+    }
+} else {
+    Write-Info "Writing Tsinghua mirror config to ~/.condarc..."
+    Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
+}
 
 # Cleanup installer
 Remove-Item $LOCAL_INSTALLER -Force -ErrorAction SilentlyContinue
