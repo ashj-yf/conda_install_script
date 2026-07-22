@@ -13,7 +13,7 @@ $ErrorActionPreference = "Stop"
 $env:JAVA_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/openjdk/21.0.2/openjdk-21.0.2_windows-x64_bin.zip"
 
 # Git 下载地址（华为镜像）
-$GIT_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/git-for-windows/git-2.47.1.windows.1-64-bit.exe"
+$GIT_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/git-for-windows/v2.47.1.windows.1/Git-2.47.1-64-bit.exe"
 
 # 安装路径
 $JAVA_INSTALL_PATH = "C:\ProgramData\Java\jdk-21"
@@ -293,8 +293,9 @@ if (Get-Command conda -ErrorAction SilentlyContinue) {
     try {
         Invoke-WebRequest -Uri $MINICONDA_SCRIPT_URL -OutFile $MINICONDA_SCRIPT -UseBasicParsing
         Write-Info "正在安装 Miniconda（静默模式）..."
-        # 执行安装脚本
-        & $MINICONDA_SCRIPT -Path $MINICONDA_INSTALL_PATH
+        # 执行安装脚本（子进程 + Bypass 绕过执行策略；子进程 exit 不影响本进程）
+        & powershell.exe -ExecutionPolicy Bypass -NoProfile -File $MINICONDA_SCRIPT -Path $MINICONDA_INSTALL_PATH
+        if ($LASTEXITCODE -ne 0) { throw "Miniconda 安装脚本退出码: $LASTEXITCODE" }
     } catch {
         Write-Warn "Miniconda 安装失败: $_"
         Write-Info "请手动运行: irm $MINICONDA_SCRIPT_URL | iex"
