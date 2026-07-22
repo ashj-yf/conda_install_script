@@ -43,10 +43,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
-irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 #### Gitee 源（国内推荐）
@@ -65,10 +65,10 @@ bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/inst
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!TIP]
@@ -96,14 +96,16 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 | iex').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!NOTE]
 > 脚本会**自动提权**到管理员权限（运行时弹出 UAC 确认窗口，点击「是」即可），无需手动以管理员身份运行。
+>
+> 命令采用「先下载到临时文件再执行」而非 `irm ... | iex`：脚本顶部的 `[CmdletBinding()]`/`param()` 块会被 `iex` 当作普通命令解析而报错（意外的属性 CmdletBinding），必须落地为 `.ps1` 文件执行。
 >
 > 如遇到 `禁止运行脚本` 错误，请先执行：
 > ```powershell

@@ -321,7 +321,7 @@ if (Get-Command conda -ErrorAction SilentlyContinue) {
         if ($LASTEXITCODE -ne 0) { throw "Miniconda 安装脚本退出码: $LASTEXITCODE" }
     } catch {
         Write-Warn "Miniconda 安装失败: $_"
-        Write-Info "请手动运行: irm $MINICONDA_SCRIPT_URL | iex"
+        Write-Info "请手动运行: irm $MINICONDA_SCRIPT_URL -OutFile `$env:TEMP\install_miniconda.ps1; & `$env:TEMP\install_miniconda.ps1"
     } finally {
         if (Test-Path $MINICONDA_SCRIPT) { Remove-Item $MINICONDA_SCRIPT -Force -ErrorAction SilentlyContinue }
     }
