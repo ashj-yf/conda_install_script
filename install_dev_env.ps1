@@ -162,17 +162,33 @@ $env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [En
 # ===========================================
 Write-Step 1 "安装 Chrome"
 try {
-    $chrome = Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe" -ErrorAction SilentlyContinue
-    if ($chrome -and (Test-Path $chrome."(default)")) {
-        Write-Info "Chrome 已安装: $($chrome.'(default)')"
-    } elseif (Get-Command chrome -ErrorAction SilentlyContinue) {
-        Write-Info "Chrome 已安装（命令行可用）"
+    $chromePath = $null
+    # 检查注册表 App Paths（HKLM 系统级 + HKCU 用户级）
+    foreach ($hive in @("HKLM:", "HKCU:")) {
+        $chrome = Get-ItemProperty "$hive\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe" -ErrorAction SilentlyContinue
+        if ($chrome -and $chrome.'(default)' -and (Test-Path $chrome.'(default)')) {
+            $chromePath = $chrome.'(default)'
+            break
+        }
+    }
+    # 检查 PATH
+    if (-not $chromePath) {
+        $cmd = Get-Command chrome -ErrorAction SilentlyContinue
+        if ($cmd) { $chromePath = $cmd.Source }
+    }
+    # 检查常见安装路径（含用户级安装）
+    if (-not $chromePath) {
+        foreach ($p in @("$env:ProgramFiles\Google\Chrome\Application\chrome.exe", "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe", "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe")) {
+            if ($p -and (Test-Path $p)) { $chromePath = $p; break }
+        }
+    }
+    if ($chromePath) {
+        Write-Info "Chrome 已安装: $chromePath"
     } else {
         Write-Info "正在下载 Chrome 安装程序..."
-        $chromeSetup = $CHROME_SETUP
-        Invoke-WebRequest -Uri "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $chromeSetup -UseBasicParsing
+        Invoke-WebRequest -Uri "https://dl.google.com/chrome/install/latest/chrome_installer.exe" -OutFile $CHROME_SETUP -UseBasicParsing
         Write-Info "正在安装 Chrome（静默模式）..."
-        Start-Process $chromeSetup -ArgumentList "/silent /install" -Wait
+        Start-Process $CHROME_SETUP -ArgumentList "/silent /install" -Wait
         Write-Info "Chrome 安装完成"
     }
 } catch {
@@ -263,8 +279,15 @@ try {
 # ===========================================
 Write-Step 5 "安装 Git"
 try {
-    if (Get-Command git -ErrorAction SilentlyContinue) {
-        $gitVersion = & git --version 2>&1
+    $gitCmd = Get-Command git -ErrorAction SilentlyContinue
+    # Get-Command 检测不到时，检查常见安装路径
+    if (-not $gitCmd) {
+        foreach ($p in @("$env:ProgramFiles\Git\cmd\git.exe", "${env:ProgramFiles(x86)}\Git\cmd\git.exe")) {
+            if ($p -and (Test-Path $p)) { $gitCmd = $p; break }
+        }
+    }
+    if ($gitCmd) {
+        $gitVersion = & $gitCmd --version 2>&1
         Write-Info "Git 已安装: $gitVersion"
     } else {
         Write-Info "正在下载 Git 安装程序..."
