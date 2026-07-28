@@ -172,12 +172,23 @@ if ($huorongInstalled -and -not $Force) {
     if ($recheck) {
         Write-Info "Huorong service already running. Skipping installation."
     } else {
+        # Check admin rights (NSIS manifest requires Administrator)
+        $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+        if (-not $isAdmin) {
+            Write-Warn "Huorong installer requires Administrator privileges."
+            Write-Info "Attempting to run installer (UAC prompt may appear)..."
+        }
+
         Write-Info "Running silent installer..."
         try {
             # NSIS silent install: /S (must be uppercase)
-            $proc = Start-Process -FilePath $HUORONG_SETUP -ArgumentList "/S" -Wait -PassThru
+            # Use -Verb RunAs to ensure admin elevation for the installer
+            $proc = Start-Process -FilePath $HUORONG_SETUP -ArgumentList "/S" -Wait -PassThru -Verb RunAs
             if ($proc.ExitCode -ne 0) {
                 Write-Warn "Huorong installer exited with code: $($proc.ExitCode)"
+                if ($proc.ExitCode -eq 2) {
+                    Write-Warn "Exit code 2 may indicate: UAC denied, incompatible OS, or installer self-extract failure."
+                }
             } else {
                 Write-Info "Huorong installation complete."
             }
@@ -189,11 +200,34 @@ if ($huorongInstalled -and -not $Force) {
 
 # Verify
 Write-Info "Verifying Huorong installation..."
+$huorongFound = $false
+
+# Check service
 $verifyService = Get-Service -Name "HipsDaemon" -ErrorAction SilentlyContinue
 if ($verifyService) {
     Write-Info "Huorong service (HipsDaemon): $($verifyService.Status)"
-} else {
-    Write-Warn "Huorong service not found. The installation may require a reboot, or it may have installed to a different location."
+    $huorongFound = $true
+}
+
+# Check common install paths
+$verifyPaths = @(
+    "$env:ProgramFiles\Huorong\ESEndpoint\bin\HipsMain.exe",
+    "${env:ProgramFiles(x86)}\Huorong\ESEndpoint\bin\HipsMain.exe",
+    "C:\Program Files\Huorong\ESEndpoint\bin\HipsMain.exe",
+    "C:\Program Files (x86)\Huorong\ESEndpoint\bin\HipsMain.exe",
+    "$env:ProgramFiles\Huorong\Sysdiag\bin\HipsMain.exe",
+    "${env:ProgramFiles(x86)}\Huorong\Sysdiag\bin\HipsMain.exe"
+)
+foreach ($p in $verifyPaths) {
+    if (Test-Path $p) {
+        Write-Info "Huorong installed at: $p"
+        $huorongFound = $true
+        break
+    }
+}
+
+if (-not $huorongFound) {
+    Write-Warn "Huorong not detected. A system reboot may be required, or run this script as Administrator."
 }
 
 # Cleanup
