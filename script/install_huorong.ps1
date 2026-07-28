@@ -10,18 +10,19 @@ param(
 )
 
 
+$ErrorActionPreference = "Stop"
+
 $SCRIPT_VERSION = "1.0.0"
 
-# 火绒安全软件 CDN 全量包（自动指向最新版）
-$DEFAULT_DOWNLOAD_URL = "https://down5.huorong.cn/sysdiag-all-full-latest.exe"
-
-# Resolve: CLI arg > default
-$HUORONG_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) { $DownloadUrl } else { $DEFAULT_DOWNLOAD_URL }
+# Huorong CDN full package (always points to latest)
+$HUORONG_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) {
+    $DownloadUrl
+} else {
+    "https://down5.huorong.cn/sysdiag-all-full-latest.exe"
+}
 
 $HUORONG_SETUP = Join-Path $env:TEMP "HuorongSetup.exe"
 $TOTAL_STEPS = 3
-
-$ErrorActionPreference = "Stop"
 
 # --- Logging ---
 function Write-Info($msg)  { Write-Host "[INFO] $msg" -ForegroundColor Green }
