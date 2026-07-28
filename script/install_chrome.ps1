@@ -144,9 +144,9 @@ Write-Host " Chrome installation finished!" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Green
 
 } finally {
-    # Cleanup on error
-    if (Test-Path $CHROME_SETUP) {
+    # Keep cached installer on error for retry; only clean zero-length files
+    if ((Test-Path $CHROME_SETUP) -and (Get-Item $CHROME_SETUP).Length -eq 0) {
         Remove-Item $CHROME_SETUP -Force -ErrorAction SilentlyContinue
-        Write-Info "Cleaned up: $CHROME_SETUP"
+        Write-Info "Cleaned up zero-length installer: $CHROME_SETUP"
     }
 }

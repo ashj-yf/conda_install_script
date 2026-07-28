@@ -315,9 +315,9 @@ Write-Host "  conda config --show channels"
 Write-Host "============================================================" -ForegroundColor Green
 
 } finally {
-    # Cleanup on error
-    if ((Test-Path $LOCAL_INSTALLER) -and (-not $DryRun)) {
+    # Keep cached installer on error for retry; only clean zero-length files
+    if ((Test-Path $LOCAL_INSTALLER) -and (Get-Item $LOCAL_INSTALLER).Length -eq 0) {
         Remove-Item $LOCAL_INSTALLER -Force -ErrorAction SilentlyContinue
-        Write-Info "Cleaned up partial download: $LOCAL_INSTALLER"
+        Write-Info "Cleaned up zero-length installer: $LOCAL_INSTALLER"
     }
 }

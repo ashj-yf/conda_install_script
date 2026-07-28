@@ -231,8 +231,7 @@ Write-Host "  java --version"
 Write-Host "============================================================" -ForegroundColor Green
 
 } finally {
-    # Do NOT delete ZIP on error — it may be a partial download worth retrying
-    # but we do clean the zip file if it's zero-length
+    # Keep cached ZIP on error for retry; only clean zero-length files
     if ((Test-Path $JAVA_ZIP) -and (Get-Item $JAVA_ZIP).Length -eq 0) {
         Remove-Item $JAVA_ZIP -Force -ErrorAction SilentlyContinue
         Write-Info "Cleaned up zero-length ZIP: $JAVA_ZIP"

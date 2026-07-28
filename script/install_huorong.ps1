@@ -282,9 +282,9 @@ Write-Host "  Get-Service HipsDaemon"
 Write-Host ""
 
 } finally {
-    # Cleanup on error
-    if (Test-Path $HUORONG_SETUP) {
+    # Keep cached installer on error for retry; only clean zero-length files
+    if ((Test-Path $HUORONG_SETUP) -and (Get-Item $HUORONG_SETUP).Length -eq 0) {
         Remove-Item $HUORONG_SETUP -Force -ErrorAction SilentlyContinue
-        Write-Info "Cleaned up: $HUORONG_SETUP"
+        Write-Info "Cleaned up zero-length installer: $HUORONG_SETUP"
     }
 }

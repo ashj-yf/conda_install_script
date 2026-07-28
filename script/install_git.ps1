@@ -191,9 +191,9 @@ Write-Host "  git --version"
 Write-Host ""
 
 } finally {
-    # Cleanup on error
-    if (Test-Path $GIT_SETUP) {
+    # Keep cached installer on error for retry; only clean zero-length files
+    if ((Test-Path $GIT_SETUP) -and (Get-Item $GIT_SETUP).Length -eq 0) {
         Remove-Item $GIT_SETUP -Force -ErrorAction SilentlyContinue
-        Write-Info "Cleaned up: $GIT_SETUP"
+        Write-Info "Cleaned up zero-length installer: $GIT_SETUP"
     }
 }
