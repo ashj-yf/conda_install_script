@@ -9,7 +9,6 @@ param(
     [switch]$Version
 )
 
-$ErrorActionPreference = "Stop"
 
 $SCRIPT_VERSION = "1.0.0"
 
@@ -17,10 +16,12 @@ $SCRIPT_VERSION = "1.0.0"
 $DEFAULT_DOWNLOAD_URL = "https://down5.huorong.cn/sysdiag-all-full-latest.exe"
 
 # Resolve: CLI arg > default
-$HUORONG_DOWNLOAD_URL = if ($DownloadUrl) { $DownloadUrl } else { $DEFAULT_DOWNLOAD_URL }
+$HUORONG_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) { $DownloadUrl } else { $DEFAULT_DOWNLOAD_URL }
 
 $HUORONG_SETUP = Join-Path $env:TEMP "HuorongSetup.exe"
 $TOTAL_STEPS = 3
+
+$ErrorActionPreference = "Stop"
 
 # --- Logging ---
 function Write-Info($msg)  { Write-Host "[INFO] $msg" -ForegroundColor Green }
@@ -146,6 +147,9 @@ if ($huorongInstalled -and -not $Force) {
     Write-Info "Installer already cached: $HUORONG_SETUP"
 } else {
     Write-Info "Downloading from: $HUORONG_DOWNLOAD_URL"
+    if ([string]::IsNullOrWhiteSpace($HUORONG_DOWNLOAD_URL)) {
+        Die "Download URL is empty. Please check your network or use -DownloadUrl to specify a custom URL."
+    }
     try {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $HUORONG_DOWNLOAD_URL -OutFile $HUORONG_SETUP -UseBasicParsing

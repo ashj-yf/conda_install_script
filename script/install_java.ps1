@@ -20,7 +20,7 @@ $DEFAULT_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/openjdk/21.0.2/openjdk-
 $DEFAULT_INSTALL_PATH = "C:\ProgramData\Java\jdk-21"
 
 # Resolve: CLI arg > env var > default
-$JAVA_DOWNLOAD_URL = if ($DownloadUrl) { $DownloadUrl } elseif ($env:JAVA_DOWNLOAD_URL) { $env:JAVA_DOWNLOAD_URL } else { $DEFAULT_DOWNLOAD_URL }
+$JAVA_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) { $DownloadUrl } elseif ($env:JAVA_DOWNLOAD_URL) { $env:JAVA_DOWNLOAD_URL } else { $DEFAULT_DOWNLOAD_URL }
 $JAVA_INSTALL_PATH = if ($Path) { $Path } else { $DEFAULT_INSTALL_PATH }
 
 $TEMP_DIR = $env:TEMP

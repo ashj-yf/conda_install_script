@@ -17,7 +17,7 @@ $SCRIPT_VERSION = "1.0.0"
 $DEFAULT_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/git-for-windows/v2.47.1.windows.1/Git-2.47.1-64-bit.exe"
 
 # Resolve: CLI arg > default
-$GIT_DOWNLOAD_URL = if ($DownloadUrl) { $DownloadUrl } else { $DEFAULT_DOWNLOAD_URL }
+$GIT_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) { $DownloadUrl } else { $DEFAULT_DOWNLOAD_URL }
 
 $GIT_SETUP = Join-Path $env:TEMP "GitSetup.exe"
 $TOTAL_STEPS = 3
