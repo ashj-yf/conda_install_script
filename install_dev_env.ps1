@@ -29,12 +29,11 @@ $SCRIPTS = @{
     Java      = "$BASE_URL/script/install_java.ps1"
     Git       = "$BASE_URL/script/install_git.ps1"
     Miniconda = "$BASE_URL/script/install_miniconda.ps1"
-    Huorong   = "$BASE_URL/script/install_huorong.ps1"
 }
 
 # 临时目录
 $TEMP_DIR = $env:TEMP
-$TOTAL_STEPS = 5
+$TOTAL_STEPS = 4
 
 # 本脚本自身的远程地址（用于 iex 管道方式自动提权时重新下载到临时文件）
 $DEV_ENV_SCRIPT_URL = "$BASE_URL/install_dev_env.ps1"
@@ -141,7 +140,7 @@ function Remove-TempFiles {
 # ===========================================
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Windows 开发环境一键安装脚本" -ForegroundColor White
-Write-Host "  Chrome + Java 21 + Git + Miniconda + Huorong" -ForegroundColor Gray
+Write-Host "  Chrome + Java 21 + Git + Miniconda" -ForegroundColor Gray
 Write-Host "========================================" -ForegroundColor Cyan
 
 if ($DryRun) {
@@ -227,11 +226,6 @@ Invoke-SubScript -ScriptName "install_miniconda.ps1" -ScriptUrl $SCRIPTS.Minicon
 }
 
 # ===========================================
-# 步骤 5: 安装火绒安全
-# ===========================================
-Write-Step 5 "安装火绒安全软件"
-Invoke-SubScript -ScriptName "install_huorong.ps1" -ScriptUrl $SCRIPTS.Huorong
-
 # ===========================================
 # 完成
 # ===========================================
