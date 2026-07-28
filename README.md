@@ -1,6 +1,6 @@
 # conda_install_script
 
-从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda）。
+从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda + 火绒安全）。
 
 ## 功能特性
 
@@ -8,7 +8,30 @@
 - **清华镜像源**下载，国内速度极快
 - **静默安装**（非交互式），一键完成
 - 安装后自动执行 `conda init` 并写入清华镜像源配置（`~/.condarc`）
-- Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda 并自动配置环境变量
+- Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda、火绒安全并自动配置环境变量
+
+## 脚本清单
+
+### 编排脚本
+
+| 脚本 | 平台 | 说明 |
+|------|------|------|
+| `install_dev_env.ps1` | Windows | 一键编排器，依次调用以下 5 个独立组件脚本完成全量安装 |
+
+### 独立组件脚本
+
+每个脚本均可**单独运行**，也可被编排脚本调用。
+
+| 脚本 | 平台 | 安装内容 | 下载源 |
+|------|------|----------|--------|
+| `install_chrome.ps1` | Windows | Google Chrome（最新稳定版） | Google 官方 |
+| `install_java.ps1` | Windows | OpenJDK 21 + JAVA_HOME / PATH 配置 | 华为镜像 |
+| `install_git.ps1` | Windows | Git for Windows | 华为镜像 |
+| `install_miniconda.ps1` | Windows | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 |
+| `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 |
+| `install_huorong.ps1` | Windows | 火绒安全软件（最新版）| 火绒 CDN |
+
+> **调用关系**：`install_dev_env.ps1` 通过 `Invoke-SubScript` 函数远程下载 `script/` 目录下的各组件脚本并执行，也支持 `-Offline` 模式从本地 `script/` 子目录加载。
 
 ## 权限说明
 
@@ -33,20 +56,20 @@
 <summary><b>Linux / macOS</b></summary>
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.sh)
 ```
 
-<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.sh)').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.sh)').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 <details>
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
-irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 #### Gitee 源（国内推荐）
@@ -55,20 +78,20 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 <summary><b>Linux / macOS</b></summary>
 
 ```bash
-bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)
+bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.sh)
 ```
 
-<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.sh)').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.sh)').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 <details>
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!TIP]
@@ -76,7 +99,7 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_miniconda.
 
 ### Windows 开发环境一键安装
 
-一次性安装 **Chrome + Java 21 + Git + Miniconda**，并自动配置环境变量。
+一次性安装 **Chrome + Java 21 + Git + Miniconda + 火绒安全**，并自动配置环境变量。
 
 #### GitHub 源
 
@@ -120,14 +143,16 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 | Java (OpenJDK) | 21.0.2 | `C:\ProgramData\Java\jdk-21` |
 | Git | 2.47.1 | `C:\Program Files\Git` |
 | Miniconda | latest | `C:\ProgramData\miniconda3` |
+| 火绒安全 | 最新版 | 默认安装位置 |
 
 **参数说明**
 
 | 参数 | 说明 |
 |------|------|
-| `-Mirror github` | 使用 GitHub 源下载 Miniconda 安装脚本 |
-| `-Mirror gitee` | 使用 Gitee 源下载 Miniconda 安装脚本（默认） |
+| `-Mirror github` | 使用 GitHub 源下载各子脚本 |
+| `-Mirror gitee` | 使用 Gitee 源下载各子脚本（默认） |
 | `-DryRun` | 仅打印配置信息，不实际安装 |
+| `-Offline` | 离线模式，从脚本同目录加载本地 .ps1 文件，不发起网络请求 |
 
 ## 本地使用
 
@@ -135,38 +160,53 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 
 ```bash
 # 本地安装（默认路径 /opt/miniconda3，需要 sudo 或 /opt 目录有写入权限）
-bash install_miniconda.sh
+bash script/install_miniconda.sh
 
 # 自定义安装路径
-bash install_miniconda.sh --path ~/miniconda3
+bash script/install_miniconda.sh --path ~/miniconda3
 
 # 预览检测信息和下载地址（不实际执行）
-bash install_miniconda.sh --dry-run
+bash script/install_miniconda.sh --dry-run
 
 # 清除已下载的安装包
-bash install_miniconda.sh --clean
+bash script/install_miniconda.sh --clean
 
 # 强制安装（跳过已有 conda 检查）
-bash install_miniconda.sh --force
+bash script/install_miniconda.sh --force
 ```
 
 ### Windows (PowerShell)
 
 ```powershell
-# 本地安装（默认路径 C:\ProgramData\miniconda3，需要管理员权限）
-.\install_miniconda.ps1
+# === 一键安装全部（编排器） ===
+.\install_dev_env.ps1                     # 默认 Gitee 源
+.\install_dev_env.ps1 -Mirror github      # GitHub 源
+.\install_dev_env.ps1 -DryRun             # 预览
+.\install_dev_env.ps1 -Offline            # 离线模式（使用本地子脚本）
 
-# 自定义安装路径
-.\install_miniconda.ps1 -Path "$env:USERPROFILE\miniconda3"
+# === 单独安装 Miniconda ===
+.\script\install_miniconda.ps1                   # 默认路径
+.\script\install_miniconda.ps1 -Path "$env:USERPROFILE\miniconda3"
+.\script\install_miniconda.ps1 -DryRun
+.\script\install_miniconda.ps1 -Clean
+.\script\install_miniconda.ps1 -Force
 
-# 预览（不实际执行）
-.\install_miniconda.ps1 -DryRun
+# === 单独安装 Java 21 ===
+.\script\install_java.ps1                        # 默认路径 + 配置环境变量
+.\script\install_java.ps1 -Path "D:\Java\jdk-21" -SkipEnv
+.\script\install_java.ps1 -DryRun
 
-# 清除已下载的安装包
-.\install_miniconda.ps1 -Clean
+# === 单独安装 Git ===
+.\script\install_git.ps1
+.\script\install_git.ps1 -Force
 
-# 强制安装
-.\install_miniconda.ps1 -Force
+# === 单独安装 Chrome ===
+.\script\install_chrome.ps1
+.\script\install_chrome.ps1 -DryRun
+
+# === 单独安装火绒安全 ===
+.\script\install_huorong.ps1
+.\script\install_huorong.ps1 -DryRun
 ```
 
 ## 参数说明
@@ -201,9 +241,9 @@ bash install_miniconda.sh --force
 
 | 操作系统 | 架构 | 脚本 |
 |----------|------|------|
-| Linux | x86_64, aarch64, armv7l, ppc64le, s390x, x86 | `install_miniconda.sh` |
-| macOS | x86_64 (Intel), arm64 (Apple Silicon) | `install_miniconda.sh` |
-| Windows | x86_64, x86 | `install_miniconda.ps1` |
+| Linux | x86_64, aarch64, armv7l, ppc64le, s390x, x86 | `script/install_miniconda.sh` |
+| macOS | x86_64 (Intel), arm64 (Apple Silicon) | `script/install_miniconda.sh` |
+| Windows | x86_64, x86 | `script/install_miniconda.ps1` |
 
 ## 镜像源配置
 
