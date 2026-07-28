@@ -227,6 +227,11 @@ if ($huorongInstalled -and -not $Force) {
                 Write-Info "Installer cached at: $HUORONG_SETUP (run manually or retry this script)"
             } else {
                 Write-Info "Huorong installation complete."
+                # Cleanup on success
+                if (Test-Path $HUORONG_SETUP) {
+                    Remove-Item $HUORONG_SETUP -Force -ErrorAction SilentlyContinue
+                    Write-Info "Installer cleaned up."
+                }
             }
         } catch {
             Die "Huorong installation failed: $_"
@@ -265,12 +270,6 @@ foreach ($p in $verifyPaths) {
 if (-not $huorongFound) {
     Write-Warn "Huorong not detected. A system reboot may be required, or run this script as Administrator."
     Write-Info "Installer cached at: $HUORONG_SETUP (run manually if needed)"
-}
-
-# Cleanup
-if (Test-Path $HUORONG_SETUP) {
-    Remove-Item $HUORONG_SETUP -Force -ErrorAction SilentlyContinue
-    Write-Info "Installer cleaned up."
 }
 
 # --- Success message ---

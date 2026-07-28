@@ -128,15 +128,14 @@ try {
         Write-Info "Installer cached at: $CHROME_SETUP (run manually or retry this script)"
     } else {
         Write-Info "Chrome installation complete."
+        # Cleanup on success
+        if (Test-Path $CHROME_SETUP) {
+            Remove-Item $CHROME_SETUP -Force -ErrorAction SilentlyContinue
+            Write-Info "Installer cleaned up."
+        }
     }
 } catch {
     Die "Chrome installation failed: $_"
-}
-
-# Cleanup
-if (Test-Path $CHROME_SETUP) {
-    Remove-Item $CHROME_SETUP -Force -ErrorAction SilentlyContinue
-    Write-Info "Installer cleaned up."
 }
 
 Write-Host ""

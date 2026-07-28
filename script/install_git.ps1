@@ -159,6 +159,11 @@ if ($gitAlreadyInstalled) {
                 Write-Info "Installer cached at: $GIT_SETUP (run manually or retry this script)"
             } else {
                 Write-Info "Git installation complete."
+                # Cleanup on success
+                if (Test-Path $GIT_SETUP) {
+                    Remove-Item $GIT_SETUP -Force -ErrorAction SilentlyContinue
+                    Write-Info "Installer cleaned up."
+                }
             }
         } catch {
             Die "Git installation failed: $_"
@@ -173,12 +178,6 @@ try {
     Write-Info "Git version: $gitVer"
 } catch {
     Write-Warn "Git verification failed. Please restart your terminal and try again."
-}
-
-# Cleanup
-if (Test-Path $GIT_SETUP) {
-    Remove-Item $GIT_SETUP -Force -ErrorAction SilentlyContinue
-    Write-Info "Installer cleaned up."
 }
 
 # --- Success message ---
