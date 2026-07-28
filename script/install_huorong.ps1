@@ -24,6 +24,49 @@ $HUORONG_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) {
 $HUORONG_SETUP = Join-Path $env:TEMP "HuorongSetup.exe"
 $TOTAL_STEPS = 3
 
+# Self remote URL for elevation re-download
+$SCRIPT_URL = "https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_huorong.ps1"
+
+# ============================================================
+# Admin elevation
+# ============================================================
+$isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+if (-not $isAdmin) {
+    Write-Info "Huorong installer requires Administrator privileges. Requesting elevation..."
+
+    $elevateArgs = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-NoExit")
+    foreach ($key in $PSBoundParameters.Keys) {
+        $value = $PSBoundParameters[$key]
+        if ($value -is [switch]) {
+            if ($value.IsPresent) { $elevateArgs += "-$key" }
+        } else {
+            $elevateArgs += "-$key"
+            $elevateArgs += "`"$value`""
+        }
+    }
+
+    $scriptFile = $PSCommandPath
+    if (-not ($scriptFile -and (Test-Path $scriptFile))) {
+        $scriptFile = Join-Path $env:TEMP "install_huorong.ps1"
+        Write-Info "Downloading script for elevation..."
+        Invoke-WebRequest -Uri $SCRIPT_URL -OutFile $scriptFile -UseBasicParsing
+    }
+    $elevateArgs += "-File", "`"$scriptFile`""
+
+    try {
+        Start-Process -Verb RunAs -FilePath "powershell.exe" -ArgumentList $elevateArgs -Wait
+    } catch {
+        Write-Err "Elevation failed or was cancelled: $_"
+        Write-Host "Please run PowerShell as Administrator and try again." -ForegroundColor Yellow
+        exit 1
+    }
+    exit
+}
+
+# ============================================================
+# Main
+# ============================================================
+
 # --- Logging ---
 function Write-Info($msg)  { Write-Host "[INFO] $msg" -ForegroundColor Green }
 function Write-Warn($msg)  { Write-Host "[WARN] $msg" -ForegroundColor Yellow }
@@ -172,22 +215,14 @@ if ($huorongInstalled -and -not $Force) {
     if ($recheck) {
         Write-Info "Huorong service already running. Skipping installation."
     } else {
-        # Check admin rights (NSIS manifest requires Administrator)
-        $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-        if (-not $isAdmin) {
-            Write-Warn "Huorong installer requires Administrator privileges."
-            Write-Info "Attempting to run installer (UAC prompt may appear)..."
-        }
-
         Write-Info "Running silent installer..."
         try {
             # NSIS silent install: /S (must be uppercase)
-            # Use -Verb RunAs to ensure admin elevation for the installer
-            $proc = Start-Process -FilePath $HUORONG_SETUP -ArgumentList "/S" -Wait -PassThru -Verb RunAs
+            $proc = Start-Process -FilePath $HUORONG_SETUP -ArgumentList "/S" -Wait -PassThru
             if ($proc.ExitCode -ne 0) {
                 Write-Warn "Huorong installer exited with code: $($proc.ExitCode)"
                 if ($proc.ExitCode -eq 2) {
-                    Write-Warn "Exit code 2 may indicate: UAC denied, incompatible OS, or installer self-extract failure."
+                    Write-Warn "Exit code 2 may indicate: incompatible OS, disk space, or installer self-extract failure."
                 }
             } else {
                 Write-Info "Huorong installation complete."
