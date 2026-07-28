@@ -14,11 +14,11 @@ $ErrorActionPreference = "Stop"
 
 $SCRIPT_VERSION = "1.0.0"
 
-# Huorong CDN full package (always points to latest)
+# Huorong official download redirect (always points to latest version)
 $HUORONG_DOWNLOAD_URL = if (-not [string]::IsNullOrWhiteSpace($DownloadUrl)) {
     $DownloadUrl
 } else {
-    "https://down5.huorong.cn/sysdiag-all-full-latest.exe"
+    "https://www.huorong.cn/product/downloadHr60.php?pro=hr60&plat=x64UrlAll"
 }
 
 $HUORONG_SETUP = Join-Path $env:TEMP "HuorongSetup.exe"
@@ -152,7 +152,6 @@ if ($huorongInstalled -and -not $Force) {
         Die "Download URL is empty. Please check your network or use -DownloadUrl to specify a custom URL."
     }
     try {
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $HUORONG_DOWNLOAD_URL -OutFile $HUORONG_SETUP -UseBasicParsing
         Write-Info "Download complete."
     } catch {
