@@ -125,6 +125,7 @@ try {
     $chromeProc = Start-Process $CHROME_SETUP -ArgumentList "/silent /install" -Wait -PassThru
     if ($chromeProc.ExitCode -ne 0) {
         Write-Warn "Chrome installer exited with code: $($chromeProc.ExitCode)"
+        Write-Info "Installer cached at: $CHROME_SETUP (run manually or retry this script)"
     } else {
         Write-Info "Chrome installation complete."
     }

@@ -156,6 +156,7 @@ if ($gitAlreadyInstalled) {
 
             if ($gitProc.ExitCode -ne 0) {
                 Write-Warn "Git installer exited with code: $($gitProc.ExitCode)"
+                Write-Info "Installer cached at: $GIT_SETUP (run manually or retry this script)"
             } else {
                 Write-Info "Git installation complete."
             }

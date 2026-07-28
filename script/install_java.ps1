@@ -136,7 +136,7 @@ if ($javaAlreadyInstalled) {
         Invoke-WebRequest -Uri $JAVA_DOWNLOAD_URL -OutFile $JAVA_ZIP -UseBasicParsing
         Write-Info "Download complete."
     } catch {
-        Die "Java download failed: $_"
+        Die "Java download failed: $_`n  Cached at: $JAVA_ZIP (may be partial — retry this script to resume)"
     }
 }
 
@@ -175,7 +175,7 @@ if ($javaAlreadyInstalled) {
             }
             Write-Info "Extraction complete."
         } catch {
-            Die "Java extraction failed: $_"
+            Die "Java extraction failed: $_`n  ZIP cached at: $JAVA_ZIP (retry this script to resume)"
         }
     }
 }

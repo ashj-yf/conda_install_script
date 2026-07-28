@@ -224,6 +224,7 @@ if ($huorongInstalled -and -not $Force) {
                 if ($proc.ExitCode -eq 2) {
                     Write-Warn "Exit code 2 may indicate: incompatible OS, disk space, or installer self-extract failure."
                 }
+                Write-Info "Installer cached at: $HUORONG_SETUP (run manually or retry this script)"
             } else {
                 Write-Info "Huorong installation complete."
             }
@@ -263,6 +264,7 @@ foreach ($p in $verifyPaths) {
 
 if (-not $huorongFound) {
     Write-Warn "Huorong not detected. A system reboot may be required, or run this script as Administrator."
+    Write-Info "Installer cached at: $HUORONG_SETUP (run manually if needed)"
 }
 
 # Cleanup

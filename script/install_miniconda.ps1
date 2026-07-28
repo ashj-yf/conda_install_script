@@ -172,7 +172,7 @@ if ($CONDA_ALREADY_INSTALLED) {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -Uri $DOWNLOAD_URL -OutFile $LOCAL_INSTALLER -UseBasicParsing
     } catch {
-        Die "Download failed. URL: $DOWNLOAD_URL`nError: $_"
+        Die "Download failed. URL: $DOWNLOAD_URL`nError: $_`n  Cached at: $LOCAL_INSTALLER"
     }
 
     if (-not (Test-Path $LOCAL_INSTALLER) -or (Get-Item $LOCAL_INSTALLER).Length -eq 0) {
@@ -201,10 +201,10 @@ if ($CONDA_ALREADY_INSTALLED) {
         try {
             $proc = Start-Process -FilePath $LOCAL_INSTALLER -ArgumentList "/S","/D=$INSTALL_PATH" -Wait -PassThru
             if ($proc.ExitCode -ne 0) {
-                Die "Miniconda installation failed with exit code $($proc.ExitCode)."
+                Die "Miniconda installation failed with exit code $($proc.ExitCode).`n  Installer cached at: $LOCAL_INSTALLER (run manually or retry this script)"
             }
         } catch {
-            Die "Miniconda installation failed: $_"
+            Die "Miniconda installation failed: $_`n  Installer cached at: $LOCAL_INSTALLER"
         }
     }
 }
