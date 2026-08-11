@@ -5,6 +5,11 @@
 irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_allure.ps1 -OutFile $env:TEMP\install_allure.ps1; & $env:TEMP\install_allure.ps1
 ```
 
+## install_allure3.ps1
+```powershell
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_allure3.ps1 -OutFile $env:TEMP\install_allure3.ps1; & $env:TEMP\install_allure3.ps1
+```
+
 ## install_chrome.ps1
 ```powershell
 irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_chrome.ps1 -OutFile $env:TEMP\install_chrome.ps1; & $env:TEMP\install_chrome.ps1
@@ -35,11 +40,21 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_min
 bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.sh)
 ```
 
+## install_node.ps1
+```powershell
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_node.ps1 -OutFile $env:TEMP\install_node.ps1; & $env:TEMP\install_node.ps1
+```
+
 # GitHub
 
 ## install_allure.ps1
 ```powershell
 irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_allure.ps1 -OutFile $env:TEMP\install_allure.ps1; & $env:TEMP\install_allure.ps1
+```
+
+## install_allure3.ps1
+```powershell
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_allure3.ps1 -OutFile $env:TEMP\install_allure3.ps1; & $env:TEMP\install_allure3.ps1
 ```
 
 ## install_chrome.ps1
@@ -70,4 +85,9 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script
 ## install_miniconda.sh
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.sh)
+```
+
+## install_node.ps1
+```powershell
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_node.ps1 -OutFile $env:TEMP\install_node.ps1; & $env:TEMP\install_node.ps1
 ```

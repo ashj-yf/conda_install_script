@@ -13,13 +13,14 @@ $ErrorActionPreference = "Stop"
 # Java 下载地址（可在此处修改，或通过环境变量覆盖）
 $env:JAVA_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/openjdk/21.0.2/openjdk-21.0.2_windows-x64_bin.zip"
 
-# Allure 版本（必须大于 2.44.0）
-$ALLURE_VERSION = $env:ALLURE_VERSION, "2.45.0" | Select-Object -First 1
+# Allure 3 版本与 npm 源（Allure 3 只通过 npm 分发，依赖 Node.js）
+$ALLURE3_VERSION = $env:ALLURE3_VERSION, "latest" | Select-Object -First 1
+$ALLURE3_REGISTRY = $env:ALLURE3_REGISTRY, "https://registry.npmmirror.com" | Select-Object -First 1
 
 # 安装路径
 $JAVA_INSTALL_PATH = "C:\ProgramData\Java\jdk-21"
 $MINICONDA_INSTALL_PATH = $env:CONDA_INSTALL_PATH, "C:\ProgramData\miniconda3" | Select-Object -First 1
-$ALLURE_INSTALL_PATH = "C:\ProgramData\Allure\allure-$ALLURE_VERSION"
+$NODE_INSTALL_PATH = $env:NODE_INSTALL_PATH, "C:\ProgramData\nodejs" | Select-Object -First 1
 
 # ==================== 远程脚本地址 ====================
 # 远程仓库基础 URL
@@ -28,17 +29,19 @@ $GITEE_BASE = "https://gitee.com/ashj-yf/conda_install_script/raw/master"
 $BASE_URL = if ($Mirror -eq "github") { $GITHUB_BASE } else { $GITEE_BASE }
 
 # 各组件独立脚本
+# 注：install_allure.ps1（Allure 2）仍保留在仓库中可单独运行，但不再参与编排
 $SCRIPTS = @{
     Chrome    = "$BASE_URL/script/install_chrome.ps1"
     Java      = "$BASE_URL/script/install_java.ps1"
     Git       = "$BASE_URL/script/install_git.ps1"
     Miniconda = "$BASE_URL/script/install_miniconda.ps1"
-    Allure    = "$BASE_URL/script/install_allure.ps1"
+    Node      = "$BASE_URL/script/install_node.ps1"
+    Allure3   = "$BASE_URL/script/install_allure3.ps1"
 }
 
 # 临时目录
 $TEMP_DIR = $env:TEMP
-$TOTAL_STEPS = 5
+$TOTAL_STEPS = 6
 
 # 本脚本自身的远程地址（用于 iex 管道方式自动提权时重新下载到临时文件）
 $DEV_ENV_SCRIPT_URL = "$BASE_URL/install_dev_env.ps1"
@@ -123,7 +126,7 @@ function Remove-TempFiles {
     Write-Host ""
     Write-Info "正在清理临时文件..."
 
-    $patterns = @("ChromeSetup.exe", "GitSetup.exe", "openjdk-*.zip", "allure-commandline-*.zip", "install_*.ps1")
+    $patterns = @("ChromeSetup.exe", "GitSetup.exe", "openjdk-*.zip", "node-v*-win-*.zip", "install_*.ps1")
     foreach ($pattern in $patterns) {
         Get-ChildItem $TEMP_DIR -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
             Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
@@ -145,7 +148,7 @@ function Remove-TempFiles {
 # ===========================================
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Windows 开发环境一键安装脚本" -ForegroundColor White
-Write-Host "  Chrome + Java 21 + Git + Miniconda + Allure" -ForegroundColor Gray
+Write-Host "  Chrome + Java 21 + Git + Miniconda + Node.js + Allure 3" -ForegroundColor Gray
 Write-Host "========================================" -ForegroundColor Cyan
 
 if ($DryRun) {
@@ -153,8 +156,9 @@ if ($DryRun) {
     Write-Host "Java 下载地址: $env:JAVA_DOWNLOAD_URL"
     Write-Host "Java 安装路径: $JAVA_INSTALL_PATH"
     Write-Host "Miniconda 安装路径: $MINICONDA_INSTALL_PATH"
-    Write-Host "Allure 版本: $ALLURE_VERSION"
-    Write-Host "Allure 安装路径: $ALLURE_INSTALL_PATH"
+    Write-Host "Node.js 安装路径: $NODE_INSTALL_PATH（版本：最新 LTS）"
+    Write-Host "Allure 3 版本: $ALLURE3_VERSION"
+    Write-Host "Allure 3 npm 源: $ALLURE3_REGISTRY"
     Write-Host "镜像源: $Mirror"
     Write-Host "子脚本基础 URL: $BASE_URL"
     Write-Host ""
@@ -233,12 +237,23 @@ Invoke-SubScript -ScriptName "install_miniconda.ps1" -ScriptUrl $SCRIPTS.Minicon
 }
 
 # ===========================================
-# 步骤 5: 安装 Allure
+# 步骤 5: 安装 Node.js（Allure 3 的运行时依赖）
 # ===========================================
-Write-Step 5 "安装 Allure $ALLURE_VERSION"
-Invoke-SubScript -ScriptName "install_allure.ps1" -ScriptUrl $SCRIPTS.Allure -Arguments @{
-    Path          = $ALLURE_INSTALL_PATH
-    AllureVersion = $ALLURE_VERSION
+Write-Step 5 "安装 Node.js（最新 LTS）"
+Invoke-SubScript -ScriptName "install_node.ps1" -ScriptUrl $SCRIPTS.Node -Arguments @{
+    Path = $NODE_INSTALL_PATH
+}
+
+# 刷新 PATH，让下一步能直接找到刚安装的 node / npm
+$env:Path = [Environment]::GetEnvironmentVariable("Path", "Machine") + ";" + [Environment]::GetEnvironmentVariable("Path", "User")
+
+# ===========================================
+# 步骤 6: 安装 Allure 3
+# ===========================================
+Write-Step 6 "安装 Allure 3（npm 全局包）"
+Invoke-SubScript -ScriptName "install_allure3.ps1" -ScriptUrl $SCRIPTS.Allure3 -Arguments @{
+    AllureVersion = $ALLURE3_VERSION
+    Registry      = $ALLURE3_REGISTRY
 }
 
 # ===========================================
@@ -250,6 +265,8 @@ Write-Host "验证命令：" -ForegroundColor White
 Write-Host "  java --version" -ForegroundColor Cyan
 Write-Host "  conda --version" -ForegroundColor Cyan
 Write-Host "  conda info" -ForegroundColor Cyan
+Write-Host "  node --version" -ForegroundColor Cyan
+Write-Host "  npm --version" -ForegroundColor Cyan
 Write-Host "  allure --version" -ForegroundColor Cyan
 Write-Host ""
 
@@ -267,10 +284,13 @@ Write-Host ""
 Write-Host "环境变量配置：" -ForegroundColor White
 Write-Host "  JAVA_HOME   = $JAVA_INSTALL_PATH" -ForegroundColor Gray
 Write-Host "  Miniconda   = $MINICONDA_INSTALL_PATH" -ForegroundColor Gray
-Write-Host "  Allure      = $ALLURE_INSTALL_PATH" -ForegroundColor Gray
+Write-Host "  Node.js     = $NODE_INSTALL_PATH" -ForegroundColor Gray
+Write-Host "  Allure 3    = npm 全局包（npm ls -g allure 查看）" -ForegroundColor Gray
 Write-Host ""
 Write-Host "验证命令：" -ForegroundColor White
 Write-Host "  java --version" -ForegroundColor Cyan
 Write-Host "  conda --version" -ForegroundColor Cyan
 Write-Host "  conda info" -ForegroundColor Cyan
+Write-Host "  node --version" -ForegroundColor Cyan
+Write-Host "  npm --version" -ForegroundColor Cyan
 Write-Host "  allure --version" -ForegroundColor Cyan
