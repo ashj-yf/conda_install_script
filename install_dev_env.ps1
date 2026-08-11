@@ -13,9 +13,13 @@ $ErrorActionPreference = "Stop"
 # Java 下载地址（可在此处修改，或通过环境变量覆盖）
 $env:JAVA_DOWNLOAD_URL = "https://mirrors.huaweicloud.com/openjdk/21.0.2/openjdk-21.0.2_windows-x64_bin.zip"
 
+# Allure 版本（必须大于 2.44.0）
+$ALLURE_VERSION = $env:ALLURE_VERSION, "2.45.0" | Select-Object -First 1
+
 # 安装路径
 $JAVA_INSTALL_PATH = "C:\ProgramData\Java\jdk-21"
 $MINICONDA_INSTALL_PATH = $env:CONDA_INSTALL_PATH, "C:\ProgramData\miniconda3" | Select-Object -First 1
+$ALLURE_INSTALL_PATH = "C:\ProgramData\Allure\allure-$ALLURE_VERSION"
 
 # ==================== 远程脚本地址 ====================
 # 远程仓库基础 URL
@@ -29,11 +33,12 @@ $SCRIPTS = @{
     Java      = "$BASE_URL/script/install_java.ps1"
     Git       = "$BASE_URL/script/install_git.ps1"
     Miniconda = "$BASE_URL/script/install_miniconda.ps1"
+    Allure    = "$BASE_URL/script/install_allure.ps1"
 }
 
 # 临时目录
 $TEMP_DIR = $env:TEMP
-$TOTAL_STEPS = 4
+$TOTAL_STEPS = 5
 
 # 本脚本自身的远程地址（用于 iex 管道方式自动提权时重新下载到临时文件）
 $DEV_ENV_SCRIPT_URL = "$BASE_URL/install_dev_env.ps1"
@@ -118,7 +123,7 @@ function Remove-TempFiles {
     Write-Host ""
     Write-Info "正在清理临时文件..."
 
-    $patterns = @("ChromeSetup.exe", "GitSetup.exe", "openjdk-*.zip", "install_*.ps1")
+    $patterns = @("ChromeSetup.exe", "GitSetup.exe", "openjdk-*.zip", "allure-commandline-*.zip", "install_*.ps1")
     foreach ($pattern in $patterns) {
         Get-ChildItem $TEMP_DIR -Filter $pattern -ErrorAction SilentlyContinue | ForEach-Object {
             Remove-Item $_.FullName -Force -ErrorAction SilentlyContinue
@@ -140,7 +145,7 @@ function Remove-TempFiles {
 # ===========================================
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  Windows 开发环境一键安装脚本" -ForegroundColor White
-Write-Host "  Chrome + Java 21 + Git + Miniconda" -ForegroundColor Gray
+Write-Host "  Chrome + Java 21 + Git + Miniconda + Allure" -ForegroundColor Gray
 Write-Host "========================================" -ForegroundColor Cyan
 
 if ($DryRun) {
@@ -148,6 +153,8 @@ if ($DryRun) {
     Write-Host "Java 下载地址: $env:JAVA_DOWNLOAD_URL"
     Write-Host "Java 安装路径: $JAVA_INSTALL_PATH"
     Write-Host "Miniconda 安装路径: $MINICONDA_INSTALL_PATH"
+    Write-Host "Allure 版本: $ALLURE_VERSION"
+    Write-Host "Allure 安装路径: $ALLURE_INSTALL_PATH"
     Write-Host "镜像源: $Mirror"
     Write-Host "子脚本基础 URL: $BASE_URL"
     Write-Host ""
@@ -226,6 +233,15 @@ Invoke-SubScript -ScriptName "install_miniconda.ps1" -ScriptUrl $SCRIPTS.Minicon
 }
 
 # ===========================================
+# 步骤 5: 安装 Allure
+# ===========================================
+Write-Step 5 "安装 Allure $ALLURE_VERSION"
+Invoke-SubScript -ScriptName "install_allure.ps1" -ScriptUrl $SCRIPTS.Allure -Arguments @{
+    Path          = $ALLURE_INSTALL_PATH
+    AllureVersion = $ALLURE_VERSION
+}
+
+# ===========================================
 # ===========================================
 # 完成
 # ===========================================
@@ -234,6 +250,7 @@ Write-Host "验证命令：" -ForegroundColor White
 Write-Host "  java --version" -ForegroundColor Cyan
 Write-Host "  conda --version" -ForegroundColor Cyan
 Write-Host "  conda info" -ForegroundColor Cyan
+Write-Host "  allure --version" -ForegroundColor Cyan
 Write-Host ""
 
 # 清理临时文件
@@ -250,8 +267,10 @@ Write-Host ""
 Write-Host "环境变量配置：" -ForegroundColor White
 Write-Host "  JAVA_HOME   = $JAVA_INSTALL_PATH" -ForegroundColor Gray
 Write-Host "  Miniconda   = $MINICONDA_INSTALL_PATH" -ForegroundColor Gray
+Write-Host "  Allure      = $ALLURE_INSTALL_PATH" -ForegroundColor Gray
 Write-Host ""
 Write-Host "验证命令：" -ForegroundColor White
 Write-Host "  java --version" -ForegroundColor Cyan
 Write-Host "  conda --version" -ForegroundColor Cyan
 Write-Host "  conda info" -ForegroundColor Cyan
+Write-Host "  allure --version" -ForegroundColor Cyan

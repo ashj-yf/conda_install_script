@@ -1,6 +1,6 @@
 # conda_install_script
 
-从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda）。
+从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda + Allure）。
 
 ## 功能特性
 
@@ -8,7 +8,7 @@
 - **清华镜像源**下载，国内速度极快
 - **静默安装**（非交互式），一键完成
 - 安装后自动执行 `conda init` 并写入清华镜像源配置（`~/.condarc`）
-- Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda 并自动配置环境变量
+- Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda、Allure 并自动配置环境变量
 
 ## 脚本清单
 
@@ -16,7 +16,7 @@
 
 | 脚本 | 平台 | 说明 |
 |------|------|------|
-| `install_dev_env.ps1` | Windows | 一键编排器，依次调用以下 4 个独立组件脚本完成全量安装 |
+| `install_dev_env.ps1` | Windows | 一键编排器，依次调用以下 5 个独立组件脚本完成全量安装 |
 
 ### 独立组件脚本
 
@@ -28,6 +28,7 @@
 | `install_java.ps1` | Windows | OpenJDK 21 + JAVA_HOME / PATH 配置 | 华为镜像 |
 | `install_git.ps1` | Windows | Git for Windows | 华为镜像 |
 | `install_miniconda.ps1` | Windows | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 |
+| `install_allure.ps1` | Windows | Allure Commandline 2.45.0 + PATH 配置（需 Java） | 华为 Maven 镜像 |
 | `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 |
 
 > **调用关系**：`install_dev_env.ps1` 通过 `Invoke-SubScript` 函数远程下载 `script/` 目录下的各组件脚本并执行，也支持 `-Offline` 模式从本地 `script/` 子目录加载。
@@ -98,7 +99,7 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_min
 
 ### Windows 开发环境一键安装
 
-一次性安装 **Chrome + Java 21 + Git + Miniconda**，并自动配置环境变量。
+一次性安装 **Chrome + Java 21 + Git + Miniconda + Allure**，并自动配置环境变量。
 
 #### GitHub 源
 
@@ -142,6 +143,7 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 | Java (OpenJDK) | 21.0.2 | `C:\ProgramData\Java\jdk-21` |
 | Git | 2.47.1 | `C:\Program Files\Git` |
 | Miniconda | latest | `C:\ProgramData\miniconda3` |
+| Allure | 2.45.0 | `C:\ProgramData\Allure\allure-2.45.0` |
 
 **参数说明**
 
@@ -201,6 +203,12 @@ bash script/install_miniconda.sh --force
 # === 单独安装 Chrome ===
 .\script\install_chrome.ps1
 .\script\install_chrome.ps1 -DryRun
+
+# === 单独安装 Allure（需先装好 Java） ===
+.\script\install_allure.ps1                      # 默认 2.45.0 + 加入 PATH
+.\script\install_allure.ps1 -AllureVersion 2.44.1
+.\script\install_allure.ps1 -Path "D:\Tools\allure" -SkipEnv
+.\script\install_allure.ps1 -DryRun
 ```
 
 ## 参数说明
@@ -230,6 +238,24 @@ bash script/install_miniconda.sh --force
 | `-Version` | 显示脚本版本 |
 
 支持环境变量 `CONDA_INSTALL_PATH` 覆盖默认安装路径。
+
+### install_allure.ps1（Windows）
+
+| 参数 | 说明 |
+|------|------|
+| `-Force` | 强制重装，即使已检测到符合要求的 Allure |
+| `-Path PATH` | 自定义安装路径（默认 `C:\ProgramData\Allure\allure-<版本>`） |
+| `-AllureVersion VER` | 指定版本（默认 `2.45.0`，**必须大于 2.44.0**） |
+| `-DownloadUrl URL` | 自定义下载地址（默认华为 Maven 镜像） |
+| `-SkipEnv` | 跳过 PATH 配置 |
+| `-DryRun` | 仅打印检测信息和下载 URL，不实际执行 |
+| `-Clean` | 清除已下载的 ZIP 并退出 |
+| `-Help` | 显示帮助信息 |
+| `-Version` | 显示脚本版本 |
+
+支持环境变量 `ALLURE_VERSION`、`ALLURE_INSTALL_PATH`、`ALLURE_DOWNLOAD_URL` 覆盖对应默认值。
+
+> Allure 是 JVM 工具，运行前需要 Java 8+（`java.exe` 在 PATH 中或已设置 `JAVA_HOME`）。编排器中 Allure 排在 Java 之后安装，因此无需额外处理。低于或等于 2.44.0 的已装版本会被自动升级，同时清理系统级 PATH 中指向旧版本的 `allure*\bin` 条目（用户级 PATH 不会被修改）。
 
 ## 支持的平台
 
