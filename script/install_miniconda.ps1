@@ -265,6 +265,7 @@ if (-not $cmdHasCondInit) {
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
 $condarcContent = @"
 channels:
+  - conda-forge
   - nodefaults
 custom_channels:
   conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud

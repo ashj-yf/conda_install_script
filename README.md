@@ -336,6 +336,7 @@ bash script/install_miniconda.sh --force
 
 ```yaml
 channels:
+  - conda-forge
   - nodefaults
 custom_channels:
   conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
@@ -344,9 +345,19 @@ show_channel_urls: true
 ```
 
 > [!NOTE]
-> 中科大镜像**不包含 Anaconda 官方仓库**（`pkgs/main`、`pkgs/r`、`pkgs/msys2` 等需商业授权的频道），因此配置中不含 `defaults`，日常 `conda install` 默认走 conda-forge，也未包含 pytorch 频道。需要 PyTorch 时建议使用 `pip install torch`，或显式 `conda install -c pytorch` 走官方频道。
+> 中科大镜像**不包含 Anaconda 官方仓库**（`pkgs/main`、`pkgs/r`、`pkgs/msys2` 等需商业授权的频道，2024 年起国内各镜像站均已停止镜像），因此配置不含 `defaults`。`channels` 中显式写入 `conda-forge`，使 `conda create` / `conda install` 等裸命令直接走 conda-forge 镜像——若 channels 仅有 `nodefaults`，频道列表为空，conda 会隐式回退官方 `defaults`，进而触发服务条款（ToS）报错 `CondaToSNonInteractiveError`。
 >
-> 配置后可运行 `conda clean -i` 清除索引缓存，再用 `conda create -n myenv numpy -c conda-forge` 验证。
+> 如需使用官方 defaults 频道，须先接受其服务条款：
+>
+> ```bash
+> conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+> conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+> conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/msys2
+> ```
+>
+> 需要 PyTorch 时建议使用 `pip install torch`，或显式 `conda install -c pytorch` 走官方频道。
+>
+> 配置后可运行 `conda clean -i` 清除索引缓存，再用 `conda create -n myenv numpy` 验证。
 
 ## License
 

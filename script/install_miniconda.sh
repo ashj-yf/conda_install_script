@@ -228,6 +228,7 @@ fi
 info "Writing USTC mirror config to ~/.condarc..."
 cat > "${CONDARC_PATH}" << 'CONDARC'
 channels:
+  - conda-forge
   - nodefaults
 custom_channels:
   conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
