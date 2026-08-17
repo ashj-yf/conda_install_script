@@ -2,8 +2,8 @@
 set -euo pipefail
 
 readonly SCRIPT_VERSION="1.0.0"
-readonly MIRROR_BASE_URL="https://mirrors.ustc.edu.cn/anaconda/miniconda"
-# ppc64le/s390x installers are not mirrored by USTC; those fall back to the official repo
+readonly MIRROR_BASE_URL="https://mirrors.pku.edu.cn/anaconda/miniconda"
+# Arch installers not carried by PKU (if any) fall back to the official repo
 readonly OFFICIAL_BASE_URL="https://repo.anaconda.com/miniconda"
 readonly DEFAULT_INSTALL_PATH="/opt/miniconda3"
 readonly LOCAL_INSTALLER="/tmp/Miniconda3-latest-installer.sh"
@@ -34,7 +34,7 @@ usage() {
 cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Install Miniconda (latest) from the USTC mirror.
+Install Miniconda (latest) from the PKU mirror.
 
 Options:
   --force       Skip checks for existing conda and install path
@@ -112,7 +112,7 @@ INSTALLER_FILENAME="Miniconda3-latest-${CONDA_OS}-${CONDA_ARCH}.sh"
 case "${CONDA_ARCH}" in
     ppc64le|s390x)
         DOWNLOAD_URL="${OFFICIAL_BASE_URL}/${INSTALLER_FILENAME}"
-        warn "USTC mirror does not carry ${CONDA_ARCH} installers; falling back to repo.anaconda.com."
+        warn "PKU mirror does not carry ${CONDA_ARCH} installers; falling back to repo.anaconda.com."
         ;;
     *)
         DOWNLOAD_URL="${MIRROR_BASE_URL}/${INSTALLER_FILENAME}"
@@ -217,7 +217,7 @@ step 5 "${TOTAL_STEPS}" "Configuring conda..."
 info "Running conda init..."
 "${INSTALL_PATH}/bin/conda" init || warn "conda init reported a warning."
 
-# Write ~/.condarc with USTC mirror
+# Write ~/.condarc with PKU mirror
 CONDARC_PATH="${HOME}/.condarc"
 if [[ -f "${CONDARC_PATH}" ]]; then
     BACKUP="${CONDARC_PATH}.bak.$(date +%s)"
@@ -225,16 +225,22 @@ if [[ -f "${CONDARC_PATH}" ]]; then
     warn "Existing ~/.condarc backed up to ${BACKUP}"
 fi
 
-info "Writing USTC mirror config to ~/.condarc..."
+info "Writing PKU mirror config to ~/.condarc..."
 cat > "${CONDARC_PATH}" << 'CONDARC'
 channels:
   - conda-forge
-  - nodefaults
 custom_channels:
-  conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.ustc.edu.cn/anaconda/cloud
+  conda-forge: https://mirrors.pku.edu.cn/anaconda/cloud
+  bioconda: https://mirrors.pku.edu.cn/anaconda/cloud
 show_channel_urls: true
 CONDARC
+
+# Accept Anaconda ToS for default channels (fallback guard; conda >= 24.9 only,
+# older versions lack the subcommand and are silently skipped)
+info "Accepting Anaconda ToS for default channels..."
+for ch in "https://repo.anaconda.com/pkgs/main" "https://repo.anaconda.com/pkgs/r" "https://repo.anaconda.com/pkgs/msys2"; do
+    "${INSTALL_PATH}/bin/conda" tos accept --override-channels --channel "${ch}" >/dev/null 2>&1 || true
+done
 
 # Cleanup installer
 rm -f "${LOCAL_INSTALLER}"
@@ -259,7 +265,7 @@ echo -e "${GREEN} Miniconda installed successfully!${NC}"
 echo ""
 echo "  Location:  ${INSTALL_PATH}"
 echo "  Version:   ${CONDA_VER}"
-echo "  Mirror:    USTC (mirrors.ustc.edu.cn)"
+echo "  Mirror:    PKU (mirrors.pku.edu.cn)"
 echo ""
 echo "To activate conda, run ONE of:"
 echo "  source ${SHELL_RC}"

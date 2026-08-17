@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $SCRIPT_VERSION = "1.0.0"
-$MIRROR_BASE_URL = "https://mirrors.ustc.edu.cn/anaconda/miniconda"
+$MIRROR_BASE_URL = "https://mirrors.pku.edu.cn/anaconda/miniconda"
 $DEFAULT_INSTALL_PATH = "C:\ProgramData\miniconda3"
 $LOCAL_INSTALLER = Join-Path $env:TEMP "Miniconda3-latest-installer.exe"
 $TOTAL_STEPS = 5
@@ -30,7 +30,7 @@ if ($Help) {
     Write-Host @"
 Usage: $name [OPTIONS]
 
-Install Miniconda (latest) from the USTC mirror.
+Install Miniconda (latest) from the PKU mirror.
 
 Options:
   -Force       Skip checks for existing conda and install path
@@ -261,15 +261,14 @@ if (-not $cmdHasCondInit) {
     Write-Info "CMD AutoRun already has conda initialize. Skipping."
 }
 
-# Write ~/.condarc with USTC mirror (only if changed)
+# Write ~/.condarc with PKU mirror (only if changed)
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
 $condarcContent = @"
 channels:
   - conda-forge
-  - nodefaults
 custom_channels:
-  conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.ustc.edu.cn/anaconda/cloud
+  conda-forge: https://mirrors.pku.edu.cn/anaconda/cloud
+  bioconda: https://mirrors.pku.edu.cn/anaconda/cloud
 show_channel_urls: true
 "@
 
@@ -281,12 +280,23 @@ if (Test-Path $CONDARC_PATH) {
         $backup = "${CONDARC_PATH}.bak.$([int](Get-Date -UFormat %s))"
         Copy-Item $CONDARC_PATH $backup
         Write-Warn "Existing ~/.condarc backed up to $backup"
-        Write-Info "Writing USTC mirror config to ~/.condarc..."
+        Write-Info "Writing PKU mirror config to ~/.condarc..."
         Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
     }
 } else {
-    Write-Info "Writing USTC mirror config to ~/.condarc..."
+    Write-Info "Writing PKU mirror config to ~/.condarc..."
     Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
+}
+
+# Accept Anaconda ToS for default channels (fallback guard; conda >= 24.9 only,
+# older versions lack the subcommand and are silently skipped)
+Write-Info "Accepting Anaconda ToS for default channels..."
+foreach ($ch in @(
+    "https://repo.anaconda.com/pkgs/main",
+    "https://repo.anaconda.com/pkgs/r",
+    "https://repo.anaconda.com/pkgs/msys2"
+)) {
+    try { & $condaExe tos accept --override-channels --channel $ch 2>$null | Out-Null } catch { }
 }
 
 # Cleanup installer
@@ -300,7 +310,7 @@ Write-Host " Miniconda installed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Location:  $INSTALL_PATH"
 Write-Host "  Version:   $CONDA_VER"
-Write-Host "  Mirror:    USTC (mirrors.ustc.edu.cn)"
+Write-Host "  Mirror:    PKU (mirrors.pku.edu.cn)"
 Write-Host ""
 Write-Host "To activate conda, restart your terminal OR run:"
 Write-Host "  PowerShell:  . `$env:USERPROFILE\Documents\WindowsPowerShell\profile.ps1"
