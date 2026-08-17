@@ -12,7 +12,7 @@ param(
 $ErrorActionPreference = "Stop"
 
 $SCRIPT_VERSION = "1.0.0"
-$MIRROR_BASE_URL = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
+$MIRROR_BASE_URL = "https://mirrors.ustc.edu.cn/anaconda/miniconda"
 $DEFAULT_INSTALL_PATH = "C:\ProgramData\miniconda3"
 $LOCAL_INSTALLER = Join-Path $env:TEMP "Miniconda3-latest-installer.exe"
 $TOTAL_STEPS = 5
@@ -30,7 +30,7 @@ if ($Help) {
     Write-Host @"
 Usage: $name [OPTIONS]
 
-Install Miniconda (latest) from Tsinghua mirror.
+Install Miniconda (latest) from the USTC mirror.
 
 Options:
   -Force       Skip checks for existing conda and install path
@@ -261,19 +261,15 @@ if (-not $cmdHasCondInit) {
     Write-Info "CMD AutoRun already has conda initialize. Skipping."
 }
 
-# Write ~/.condarc with Tsinghua mirror (only if changed)
+# Write ~/.condarc with USTC mirror (only if changed)
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
 $condarcContent = @"
 channels:
-  - defaults
-show_channel_urls: true
-default_channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
+  - nodefaults
 custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
+  bioconda: https://mirrors.ustc.edu.cn/anaconda/cloud
+show_channel_urls: true
 "@
 
 if (Test-Path $CONDARC_PATH) {
@@ -284,11 +280,11 @@ if (Test-Path $CONDARC_PATH) {
         $backup = "${CONDARC_PATH}.bak.$([int](Get-Date -UFormat %s))"
         Copy-Item $CONDARC_PATH $backup
         Write-Warn "Existing ~/.condarc backed up to $backup"
-        Write-Info "Writing Tsinghua mirror config to ~/.condarc..."
+        Write-Info "Writing USTC mirror config to ~/.condarc..."
         Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
     }
 } else {
-    Write-Info "Writing Tsinghua mirror config to ~/.condarc..."
+    Write-Info "Writing USTC mirror config to ~/.condarc..."
     Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
 }
 
@@ -303,7 +299,7 @@ Write-Host " Miniconda installed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Location:  $INSTALL_PATH"
 Write-Host "  Version:   $CONDA_VER"
-Write-Host "  Mirror:    Tsinghua (mirrors.tuna.tsinghua.edu.cn)"
+Write-Host "  Mirror:    USTC (mirrors.ustc.edu.cn)"
 Write-Host ""
 Write-Host "To activate conda, restart your terminal OR run:"
 Write-Host "  PowerShell:  . `$env:USERPROFILE\Documents\WindowsPowerShell\profile.ps1"

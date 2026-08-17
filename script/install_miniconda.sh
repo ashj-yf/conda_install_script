@@ -2,7 +2,9 @@
 set -euo pipefail
 
 readonly SCRIPT_VERSION="1.0.0"
-readonly MIRROR_BASE_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
+readonly MIRROR_BASE_URL="https://mirrors.ustc.edu.cn/anaconda/miniconda"
+# ppc64le/s390x installers are not mirrored by USTC; those fall back to the official repo
+readonly OFFICIAL_BASE_URL="https://repo.anaconda.com/miniconda"
 readonly DEFAULT_INSTALL_PATH="/opt/miniconda3"
 readonly LOCAL_INSTALLER="/tmp/Miniconda3-latest-installer.sh"
 readonly TOTAL_STEPS=5
@@ -32,7 +34,7 @@ usage() {
 cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Install Miniconda (latest) from Tsinghua mirror.
+Install Miniconda (latest) from the USTC mirror.
 
 Options:
   --force       Skip checks for existing conda and install path
@@ -107,7 +109,15 @@ case "${ARCH}" in
 esac
 
 INSTALLER_FILENAME="Miniconda3-latest-${CONDA_OS}-${CONDA_ARCH}.sh"
-DOWNLOAD_URL="${MIRROR_BASE_URL}/${INSTALLER_FILENAME}"
+case "${CONDA_ARCH}" in
+    ppc64le|s390x)
+        DOWNLOAD_URL="${OFFICIAL_BASE_URL}/${INSTALLER_FILENAME}"
+        warn "USTC mirror does not carry ${CONDA_ARCH} installers; falling back to repo.anaconda.com."
+        ;;
+    *)
+        DOWNLOAD_URL="${MIRROR_BASE_URL}/${INSTALLER_FILENAME}"
+        ;;
+esac
 
 info "OS: ${CONDA_OS}  |  Arch: ${CONDA_ARCH}  |  Installer: ${INSTALLER_FILENAME}"
 
@@ -207,7 +217,7 @@ step 5 "${TOTAL_STEPS}" "Configuring conda..."
 info "Running conda init..."
 "${INSTALL_PATH}/bin/conda" init || warn "conda init reported a warning."
 
-# Write ~/.condarc with Tsinghua mirror
+# Write ~/.condarc with USTC mirror
 CONDARC_PATH="${HOME}/.condarc"
 if [[ -f "${CONDARC_PATH}" ]]; then
     BACKUP="${CONDARC_PATH}.bak.$(date +%s)"
@@ -215,18 +225,14 @@ if [[ -f "${CONDARC_PATH}" ]]; then
     warn "Existing ~/.condarc backed up to ${BACKUP}"
 fi
 
-info "Writing Tsinghua mirror config to ~/.condarc..."
+info "Writing USTC mirror config to ~/.condarc..."
 cat > "${CONDARC_PATH}" << 'CONDARC'
 channels:
-  - defaults
-show_channel_urls: true
-default_channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
+  - nodefaults
 custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
+  bioconda: https://mirrors.ustc.edu.cn/anaconda/cloud
+show_channel_urls: true
 CONDARC
 
 # Cleanup installer
@@ -252,7 +258,7 @@ echo -e "${GREEN} Miniconda installed successfully!${NC}"
 echo ""
 echo "  Location:  ${INSTALL_PATH}"
 echo "  Version:   ${CONDA_VER}"
-echo "  Mirror:    Tsinghua (mirrors.tuna.tsinghua.edu.cn)"
+echo "  Mirror:    USTC (mirrors.ustc.edu.cn)"
 echo ""
 echo "To activate conda, run ONE of:"
 echo "  source ${SHELL_RC}"

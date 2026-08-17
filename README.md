@@ -1,13 +1,13 @@
 # conda_install_script
 
-从清华开源镜像站自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda + Node.js + Allure 3）。
+从中科大开源镜像站（USTC）自动下载安装 Miniconda 的脚本，支持 Linux、macOS 和 Windows。另附 Windows 开发环境一键安装脚本（Chrome + Java 21 + Git + Miniconda + Node.js + Allure 3）。
 
 ## 功能特性
 
 - **自动检测**操作系统与 CPU 架构，自动选择对应安装包
-- **清华镜像源**下载，国内速度极快
+- **中科大镜像源**下载，国内速度极快
 - **静默安装**（非交互式），一键完成
-- 安装后自动执行 `conda init` 并写入清华镜像源配置（`~/.condarc`）
+- 安装后自动执行 `conda init` 并写入中科大镜像源配置（`~/.condarc`）
 - Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda、Node.js、Allure 3 并自动配置环境变量
 
 ## 脚本清单
@@ -27,11 +27,11 @@
 | `install_chrome.ps1` | Windows | Google Chrome（最新稳定版） | Google 官方 | ✅ |
 | `install_java.ps1` | Windows | OpenJDK 21 + JAVA_HOME / PATH 配置 | 华为镜像 | ✅ |
 | `install_git.ps1` | Windows | Git for Windows | 华为镜像 | ✅ |
-| `install_miniconda.ps1` | Windows | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 | ✅ |
+| `install_miniconda.ps1` | Windows | Miniconda（最新版）+ conda init + 中科大镜像源 | 中科大镜像 | ✅ |
 | `install_node.ps1` | Windows | Node.js 最新 LTS（含 npm）+ PATH 配置 | 华为镜像 | ✅ |
 | `install_allure3.ps1` | Windows | Allure 3（npm 全局包 `allure`，需 Node.js） | npmmirror | ✅ |
 | `install_allure.ps1` | Windows | Allure 2（2.45.0，需 Java）+ PATH 配置 | 华为 Maven 镜像 | ❌ 仅单独运行 |
-| `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 | — |
+| `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 中科大镜像源 | 中科大镜像 | — |
 
 > **Allure 2 与 Allure 3**：编排器默认安装 **Allure 3**。Allure 2 的脚本 `install_allure.ps1` 仍然保留，可按需单独运行。两者的 CLI 命令名都是 `allure`，同时安装时由 PATH 顺序决定谁生效——`install_allure3.ps1` 会检测这种冲突并给出警告。
 >
@@ -328,22 +328,25 @@ bash script/install_miniconda.sh --force
 | macOS | x86_64 (Intel), arm64 (Apple Silicon) | `script/install_miniconda.sh` |
 | Windows | x86_64, x86 | `script/install_miniconda.ps1` |
 
+> ppc64le / s390x 的安装包不在中科大镜像上，脚本会自动回退到官方 `repo.anaconda.com` 下载。
+
 ## 镜像源配置
 
-安装完成后，`~/.condarc` 会自动配置为清华镜像源：
+安装完成后，`~/.condarc` 会自动配置为中科大镜像源（清华 TUNA 已停止 Anaconda 仓库镜像）：
 
 ```yaml
 channels:
-  - defaults
-show_channel_urls: true
-default_channels:
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/main
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/r
-  - https://mirrors.tuna.tsinghua.edu.cn/anaconda/pkgs/msys2
+  - nodefaults
 custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  pytorch: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  conda-forge: https://mirrors.ustc.edu.cn/anaconda/cloud
+  bioconda: https://mirrors.ustc.edu.cn/anaconda/cloud
+show_channel_urls: true
 ```
+
+> [!NOTE]
+> 中科大镜像**不包含 Anaconda 官方仓库**（`pkgs/main`、`pkgs/r`、`pkgs/msys2` 等需商业授权的频道），因此配置中不含 `defaults`，日常 `conda install` 默认走 conda-forge，也未包含 pytorch 频道。需要 PyTorch 时建议使用 `pip install torch`，或显式 `conda install -c pytorch` 走官方频道。
+>
+> 配置后可运行 `conda clean -i` 清除索引缓存，再用 `conda create -n myenv numpy -c conda-forge` 验证。
 
 ## License
 
