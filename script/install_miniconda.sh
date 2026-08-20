@@ -2,7 +2,7 @@
 set -euo pipefail
 
 readonly SCRIPT_VERSION="1.0.0"
-readonly MIRROR_BASE_URL="https://mirrors.pku.edu.cn/anaconda/miniconda"
+readonly MIRROR_BASE_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
 # Arch installers not carried by PKU (if any) fall back to the official repo
 readonly OFFICIAL_BASE_URL="https://repo.anaconda.com/miniconda"
 readonly DEFAULT_INSTALL_PATH="/opt/miniconda3"
@@ -34,7 +34,7 @@ usage() {
 cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Install Miniconda (latest) from the PKU mirror.
+Install Miniconda (latest) from the TUNA mirror.
 
 Options:
   --force       Skip checks for existing conda and install path
@@ -217,7 +217,7 @@ step 5 "${TOTAL_STEPS}" "Configuring conda..."
 info "Running conda init..."
 "${INSTALL_PATH}/bin/conda" init || warn "conda init reported a warning."
 
-# Write ~/.condarc with PKU mirror
+# Write ~/.condarc with TUNA mirror
 CONDARC_PATH="${HOME}/.condarc"
 if [[ -f "${CONDARC_PATH}" ]]; then
     BACKUP="${CONDARC_PATH}.bak.$(date +%s)"
@@ -225,13 +225,13 @@ if [[ -f "${CONDARC_PATH}" ]]; then
     warn "Existing ~/.condarc backed up to ${BACKUP}"
 fi
 
-info "Writing PKU mirror config to ~/.condarc..."
+info "Writing TUNA mirror config to ~/.condarc..."
 cat > "${CONDARC_PATH}" << 'CONDARC'
 channels:
   - conda-forge
 custom_channels:
-  conda-forge: https://mirrors.pku.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.pku.edu.cn/anaconda/cloud
+  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
 show_channel_urls: true
 CONDARC
 
@@ -265,7 +265,7 @@ echo -e "${GREEN} Miniconda installed successfully!${NC}"
 echo ""
 echo "  Location:  ${INSTALL_PATH}"
 echo "  Version:   ${CONDA_VER}"
-echo "  Mirror:    PKU (mirrors.pku.edu.cn)"
+echo "  Mirror:    TUNA (mirrors.tuna.tsinghua.edu.cn)"
 echo ""
 echo "To activate conda, run ONE of:"
 echo "  source ${SHELL_RC}"
