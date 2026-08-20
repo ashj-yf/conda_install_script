@@ -5,7 +5,7 @@
 ## 功能特性
 
 - **自动检测**操作系统与 CPU 架构，自动选择对应安装包
-- **清华镜像源**下载，国内速度极快
+- **镜像源可切换**：支持清华 TUNA（默认）与北大 PKU 双源，手动执行时自动交互选择或通过参数指定
 - **静默安装**（非交互式），一键完成
 - 安装后自动执行 `conda init` 并写入清华镜像源配置（`~/.condarc`），并自动接受 defaults 频道服务条款（兜底）
 - Windows 开发环境脚本一次性安装 Chrome、Java 21、Git、Miniconda、Node.js、Allure 3 并自动配置环境变量
@@ -27,11 +27,11 @@
 | `install_chrome.ps1` | Windows | Google Chrome（最新稳定版） | Google 官方 | ✅ |
 | `install_java.ps1` | Windows | OpenJDK 21 + JAVA_HOME / PATH 配置 | 华为镜像 | ✅ |
 | `install_git.ps1` | Windows | Git for Windows | 华为镜像 | ✅ |
-| `install_miniconda.ps1` | Windows | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 | ✅ |
+| `install_miniconda.ps1` | Windows | Miniconda（最新版）+ conda init + 可选镜像源 | 清华/北大镜像 | ✅ |
 | `install_node.ps1` | Windows | Node.js 最新 LTS（含 npm）+ PATH 配置 | 华为镜像 | ✅ |
 | `install_allure3.ps1` | Windows | Allure 3（npm 全局包 `allure`，需 Node.js） | npmmirror | ✅ |
 | `install_allure.ps1` | Windows | Allure 2（2.45.0，需 Java）+ PATH 配置 | 华为 Maven 镜像 | ❌ 仅单独运行 |
-| `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 清华镜像源 | 清华镜像 | — |
+| `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 可选镜像源 | 清华/北大镜像 | — |
 
 > **Allure 2 与 Allure 3**：编排器默认安装 **Allure 3**。Allure 2 的脚本 `install_allure.ps1` 仍然保留，可按需单独运行。两者的 CLI 命令名都是 `allure`，同时安装时由 PATH 顺序决定谁生效——`install_allure3.ps1` 会检测这种冲突并给出警告。
 >
@@ -245,6 +245,7 @@ bash script/install_miniconda.sh --force
 |------|------|
 | `--force` | 跳过已有 conda 和安装路径已存在的检查 |
 | `--path PATH` | 自定义安装路径（默认 `/opt/miniconda3`） |
+| `--mirror SRC` | 选择镜像源：`tuna`（清华，默认）或 `pku`（北大） |
 | `--dry-run` | 仅打印检测信息和下载 URL，不实际执行 |
 | `--clean` | 清除已下载的安装包并退出 |
 | `--help` | 显示帮助信息 |
@@ -252,18 +253,35 @@ bash script/install_miniconda.sh --force
 
 支持环境变量 `CONDA_INSTALL_PATH` 覆盖默认安装路径。
 
+**示例：**
+```bash
+bash install_miniconda.sh                      # 交互选择镜像源
+bash install_miniconda.sh --mirror tuna        # 使用清华源（默认）
+bash install_miniconda.sh --mirror pku         # 使用北大源
+bash install_miniconda.sh --force --mirror pku # 强制安装，使用北大源
+```
+
 ### install_miniconda.ps1（Windows）
 
 | 参数 | 说明 |
 |------|------|
 | `-Force` | 跳过已有 conda 和安装路径已存在的检查 |
 | `-Path PATH` | 自定义安装路径（默认 `C:\ProgramData\miniconda3`） |
+| `-Mirror SRC` | 选择镜像源：`tuna`（清华，默认）或 `pku`（北大） |
 | `-DryRun` | 仅打印检测信息和下载 URL，不实际执行 |
 | `-Clean` | 清除已下载的安装包并退出 |
 | `-Help` | 显示帮助信息 |
 | `-Version` | 显示脚本版本 |
 
 支持环境变量 `CONDA_INSTALL_PATH` 覆盖默认安装路径。
+
+**示例：**
+```powershell
+.\install_miniconda.ps1                       # 交互选择镜像源
+.\install_miniconda.ps1 -Mirror tuna          # 使用清华源（默认）
+.\install_miniconda.ps1 -Mirror pku            # 使用北大源
+.\install_miniconda.ps1 -Force -Mirror pku     # 强制安装，使用北大源
+```
 
 ### install_allure.ps1（Windows）
 
@@ -332,7 +350,7 @@ bash script/install_miniconda.sh --force
 
 ## 镜像源配置
 
-安装完成后，`~/.condarc` 会自动配置为清华镜像源：
+安装完成后，`~/.condarc` 会自动配置为选定的镜像源（默认清华 TUNA）：
 
 ```yaml
 channels:
@@ -342,6 +360,8 @@ custom_channels:
   bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
 show_channel_urls: true
 ```
+
+> **镜像源选择**：脚本支持清华 TUNA（默认）与北大 PKU 两套镜像源，通过 `-Mirror` / `--mirror` 参数指定，交互模式下会提示选择。清华源安装包下载与 conda-forge 频道均走 `mirrors.tuna.tsinghua.edu.cn`，北大源均走 `mirrors.pku.edu.cn`。
 
 > [!NOTE]
 > 北大镜像**不包含 Anaconda 官方仓库**（`pkgs/main`、`pkgs/r`、`pkgs/msys2` 等需商业授权的频道，2024 年起国内各镜像站均已停止镜像），因此配置不含 `defaults`。`channels` 显式列出 `conda-forge`（且**不写** `nodefaults`——该哨兵在 conda 24/25/26 各版本间语义漂移，空频道列表还会隐式回退官方 `defaults`），使 `conda create` / `conda install` 等裸命令直接走镜像。

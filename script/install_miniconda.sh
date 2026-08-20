@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly SCRIPT_VERSION="1.0.0"
-readonly MIRROR_BASE_URL="https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
-# Arch installers not carried by PKU (if any) fall back to the official repo
+readonly SCRIPT_VERSION="1.1.0"
+
+# --- Mirror configurations ---
+# tuna: 清华 TUNA (默认)
+# pku:  北大 PKU
+readonly MIRROR_CONFIG='{
+    "tuna": {
+        "name": "TUNA",
+        "display_name": "清华 TUNA",
+        "base_url": "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda",
+        "cloud_url": "https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud"
+    },
+    "pku": {
+        "name": "PKU",
+        "display_name": "北大 PKU",
+        "base_url": "https://mirrors.pku.edu.cn/anaconda/miniconda",
+        "cloud_url": "https://mirrors.pku.edu.cn/anaconda/cloud"
+    }
+}'
+readonly DEFAULT_MIRROR="tuna"
 readonly OFFICIAL_BASE_URL="https://repo.anaconda.com/miniconda"
 readonly DEFAULT_INSTALL_PATH="/opt/miniconda3"
 readonly LOCAL_INSTALLER="/tmp/Miniconda3-latest-installer.sh"
@@ -24,25 +41,74 @@ error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
 die()   { error "$@"; exit 1; }
 step()  { local n="$1" t="$2"; shift 2; echo -e "${BOLD}${CYAN}[${n}/${t}]${NC} ${BOLD}$*${NC}"; }
 
+# --- Get mirror config by key ---
+get_mirror_config() {
+    local key="$1"
+    echo "$MIRROR_CONFIG" | grep -o "\"${key}\": {[^}]*}" | sed 's/"${key}": //' || echo ""
+}
+
+get_mirror_value() {
+    local key="$1" field="$2"
+    echo "$MIRROR_CONFIG" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['$key']['$field'])" 2>/dev/null || \
+    echo "$MIRROR_CONFIG" | grep -o "\"${key}\".*\"${field}\": \"[^\"]*\"" | sed "s/.*\"${field}\": \"//;s/\"//"
+}
+
+# --- Mirror selection ---
+select_mirror() {
+    if [[ -n "${SELECTED_MIRROR:-}" ]]; then
+        info "Using mirror from --mirror argument: $(get_mirror_value "$SELECTED_MIRROR" display_name)"
+        echo "$SELECTED_MIRROR"
+        return
+    fi
+
+    echo ""
+    echo -e "${YELLOW}请选择 conda 镜像源：${NC}"
+    echo -e "  ${BOLD}[1]${NC} 清华 TUNA (mirrors.tuna.tsinghua.edu.cn) - 默认"
+    echo -e "  ${BOLD}[2]${NC} 北大 PKU (mirrors.pku.edu.cn)"
+    echo ""
+
+    while true; do
+        read -p "请输入选择 [1]: " choice
+        : "${choice:=1}"
+        case "$choice" in
+            1) echo "tuna"; return ;;
+            2) echo "pku"; return ;;
+            *) warn "无效选择，请输入 1 或 2" ;;
+        esac
+    done
+}
+
 # --- Arguments ---
 FORCE=false
 DRY_RUN=false
 DO_CLEAN=false
 INSTALL_PATH=""
+SELECTED_MIRROR=""
 
 usage() {
 cat <<EOF
 Usage: $(basename "$0") [OPTIONS]
 
-Install Miniconda (latest) from the TUNA mirror.
+Install Miniconda (latest) from Chinese mirror.
 
 Options:
   --force       Skip checks for existing conda and install path
   --path PATH   Custom installation path (default: /opt/miniconda3)
+  --mirror SRC  Choose mirror source: tuna (清华, default) or pku (北大)
   --dry-run     Print detection info and download URL without executing
   --clean       Remove downloaded installer file and exit
   --help        Show this help message
   --version     Print script version
+
+Available mirrors:
+  tuna  - 清华 TUNA (mirrors.tuna.tsinghua.edu.cn) [默认]
+  pku   - 北大 PKU (mirrors.pku.edu.cn)
+
+Examples:
+  $(basename "$0")                      # Interactive selection
+  $(basename "$0") --mirror tuna         # Use TUNA mirror (default)
+  $(basename "$0") --mirror pku          # Use PKU mirror
+  $(basename "$0") --force --mirror pku  # Force install with PKU mirror
 
 Environment variables:
   CONDA_INSTALL_PATH  Override default install path (same as --path)
@@ -53,6 +119,12 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --force)   FORCE=true; shift ;;
         --path)    INSTALL_PATH="$2"; shift 2 ;;
+        --mirror)
+            case "$2" in
+                tuna|pku) SELECTED_MIRROR="$2"; shift 2 ;;
+                *) die "Unknown mirror '$2'. Use --help for available mirrors." ;;
+            esac
+            ;;
         --dry-run) DRY_RUN=true; shift ;;
         --clean)   DO_CLEAN=true; shift ;;
         --help)    usage; exit 0 ;;
@@ -63,6 +135,12 @@ done
 
 # Resolve install path: CLI arg > env var > default
 INSTALL_PATH="${INSTALL_PATH:-${CONDA_INSTALL_PATH:-$DEFAULT_INSTALL_PATH}}"
+
+# --- Select mirror ---
+MIRROR_KEY="$(select_mirror)"
+MIRROR_BASE_URL="$(get_mirror_value "$MIRROR_KEY" base_url)"
+MIRROR_CLOUD_URL="$(get_mirror_value "$MIRROR_KEY" cloud_url)"
+MIRROR_DISPLAY_NAME="$(get_mirror_value "$MIRROR_KEY" display_name)"
 
 # --- Clean mode ---
 if [[ "${DO_CLEAN}" == true ]]; then
@@ -112,7 +190,7 @@ INSTALLER_FILENAME="Miniconda3-latest-${CONDA_OS}-${CONDA_ARCH}.sh"
 case "${CONDA_ARCH}" in
     ppc64le|s390x)
         DOWNLOAD_URL="${OFFICIAL_BASE_URL}/${INSTALLER_FILENAME}"
-        warn "PKU mirror does not carry ${CONDA_ARCH} installers; falling back to repo.anaconda.com."
+        warn "${MIRROR_DISPLAY_NAME} mirror does not carry ${CONDA_ARCH} installers; falling back to repo.anaconda.com."
         ;;
     *)
         DOWNLOAD_URL="${MIRROR_BASE_URL}/${INSTALLER_FILENAME}"
@@ -120,6 +198,7 @@ case "${CONDA_ARCH}" in
 esac
 
 info "OS: ${CONDA_OS}  |  Arch: ${CONDA_ARCH}  |  Installer: ${INSTALLER_FILENAME}"
+info "Mirror: ${MIRROR_DISPLAY_NAME}"
 
 # ============================================================
 # Step 2: Pre-flight checks
@@ -177,6 +256,7 @@ if [[ "${DRY_RUN}" == true ]]; then
     echo ""
     info "[DRY-RUN] Would download: ${DOWNLOAD_URL}"
     info "[DRY-RUN] Install to: ${INSTALL_PATH}"
+    info "[DRY-RUN] Mirror: ${MIRROR_DISPLAY_NAME}"
     info "[DRY-RUN] Command: bash ${LOCAL_INSTALLER} -b -p ${INSTALL_PATH}"
     exit 0
 fi
@@ -217,7 +297,7 @@ step 5 "${TOTAL_STEPS}" "Configuring conda..."
 info "Running conda init..."
 "${INSTALL_PATH}/bin/conda" init || warn "conda init reported a warning."
 
-# Write ~/.condarc with TUNA mirror
+# Write ~/.condarc with selected mirror
 CONDARC_PATH="${HOME}/.condarc"
 if [[ -f "${CONDARC_PATH}" ]]; then
     BACKUP="${CONDARC_PATH}.bak.$(date +%s)"
@@ -225,13 +305,13 @@ if [[ -f "${CONDARC_PATH}" ]]; then
     warn "Existing ~/.condarc backed up to ${BACKUP}"
 fi
 
-info "Writing TUNA mirror config to ~/.condarc..."
-cat > "${CONDARC_PATH}" << 'CONDARC'
+info "Writing ${MIRROR_DISPLAY_NAME} mirror config to ~/.condarc..."
+cat > "${CONDARC_PATH}" << CONDARC
 channels:
   - conda-forge
 custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  conda-forge: ${MIRROR_CLOUD_URL}
+  bioconda: ${MIRROR_CLOUD_URL}
 show_channel_urls: true
 CONDARC
 
@@ -265,7 +345,7 @@ echo -e "${GREEN} Miniconda installed successfully!${NC}"
 echo ""
 echo "  Location:  ${INSTALL_PATH}"
 echo "  Version:   ${CONDA_VER}"
-echo "  Mirror:    TUNA (mirrors.tuna.tsinghua.edu.cn)"
+echo "  Mirror:    ${MIRROR_DISPLAY_NAME}"
 echo ""
 echo "To activate conda, run ONE of:"
 echo "  source ${SHELL_RC}"

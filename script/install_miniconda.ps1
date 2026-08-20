@@ -5,14 +5,33 @@ param(
     [switch]$DryRun,
     [switch]$Clean,
     [string]$Path,
+    [ValidateSet("tuna", "pku")]
+    [string]$Mirror,
     [switch]$Help,
     [switch]$Version
 )
 
 $ErrorActionPreference = "Stop"
 
-$SCRIPT_VERSION = "1.0.0"
-$MIRROR_BASE_URL = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
+$SCRIPT_VERSION = "1.1.0"
+
+# --- Mirror configurations ---
+$MIRROR_CONFIG = @{
+    tuna = @{
+        Name = "TUNA"
+        DisplayName = "清华 TUNA"
+        BaseUrl = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/miniconda"
+        CloudUrl = "https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud"
+    }
+    pku = @{
+        Name = "PKU"
+        DisplayName = "北大 PKU"
+        BaseUrl = "https://mirrors.pku.edu.cn/anaconda/miniconda"
+        CloudUrl = "https://mirrors.pku.edu.cn/anaconda/cloud"
+    }
+}
+
+$DEFAULT_MIRROR = "tuna"
 $DEFAULT_INSTALL_PATH = "C:\ProgramData\miniconda3"
 $LOCAL_INSTALLER = Join-Path $env:TEMP "Miniconda3-latest-installer.exe"
 $TOTAL_STEPS = 5
@@ -24,21 +43,60 @@ function Write-Err($msg)   { Write-Host "[ERROR] $msg" -ForegroundColor Red }
 function Die($msg)         { Write-Err $msg; exit 1 }
 function Write-Step($n, $t, $msg) { Write-Host "[$n/$t] " -ForegroundColor Cyan -NoNewline; Write-Host $msg -ForegroundColor White }
 
+# --- Mirror selection ---
+function Select-Mirror {
+    if ($Mirror) {
+        $selected = $Mirror.ToLower()
+        Write-Info "Using mirror specified via -Mirror: $($MIRROR_CONFIG[$selected].DisplayName)"
+        return $selected
+    }
+
+    # Interactive selection
+    Write-Host ""
+    Write-Host "请选择 conda 镜像源：" -ForegroundColor Yellow
+    Write-Host "  [1] 清华 TUNA (mirrors.tuna.tsinghua.edu.cn) - 默认" -ForegroundColor White
+    Write-Host "  [2] 北大 PKU (mirrors.pku.edu.cn)" -ForegroundColor White
+    Write-Host ""
+
+    while ($true) {
+        $choice = Read-Host "请输入选择 [1]"
+        if ([string]::IsNullOrWhiteSpace($choice)) { $choice = "1" }
+        switch ($choice) {
+            "1" { return "tuna" }
+            "2" { return "pku" }
+            default {
+                Write-Warn "无效选择，请输入 1 或 2"
+            }
+        }
+    }
+}
+
 # --- Help ---
 if ($Help) {
     $name = Split-Path $PSCommandPath -Leaf
     Write-Host @"
 Usage: $name [OPTIONS]
 
-Install Miniconda (latest) from the TUNA mirror.
+Install Miniconda (latest) from Chinese mirror.
 
 Options:
   -Force       Skip checks for existing conda and install path
   -Path PATH   Custom installation path (default: C:\ProgramData\miniconda3)
+  -Mirror SRC  Choose mirror source: tuna (清华, default) or pku (北大)
   -DryRun      Print detection info and download URL without executing
   -Clean       Remove downloaded installer file and exit
   -Help        Show this help message
   -Version     Print script version
+
+Available mirrors:
+  tuna  - 清华 TUNA (mirrors.tuna.tsinghua.edu.cn) [默认]
+  pku   - 北大 PKU (mirrors.pku.edu.cn)
+
+Examples:
+  $name                      # Interactive selection
+  $name -Mirror tuna         # Use TUNA mirror (default)
+  $name -Mirror pku          # Use PKU mirror
+  $name -Force -Mirror pku   # Force install with PKU mirror
 
 Environment variables:
   CONDA_INSTALL_PATH  Override default install path (same as -Path)
@@ -53,6 +111,11 @@ if ($Version) {
 
 # Resolve install path: CLI arg > env var > default
 $INSTALL_PATH = if ($Path) { $Path } elseif ($env:CONDA_INSTALL_PATH) { $env:CONDA_INSTALL_PATH } else { $DEFAULT_INSTALL_PATH }
+
+# --- Select mirror ---
+$MIRROR_KEY = Select-Mirror
+$MIRROR = $MIRROR_CONFIG[$MIRROR_KEY]
+$MIRROR_BASE_URL = $MIRROR.BaseUrl
 
 # --- Clean mode ---
 if ($Clean) {
@@ -88,6 +151,7 @@ $INSTALLER_FILENAME = "Miniconda3-latest-${CONDA_OS}-${CONDA_ARCH}.exe"
 $DOWNLOAD_URL = "${MIRROR_BASE_URL}/${INSTALLER_FILENAME}"
 
 Write-Info "OS: ${CONDA_OS}  |  Arch: ${CONDA_ARCH}  |  Installer: ${INSTALLER_FILENAME}"
+Write-Info "Mirror: $($MIRROR.DisplayName)"
 
 # ============================================================
 # Step 2: Pre-flight checks
@@ -157,6 +221,7 @@ if ($DryRun) {
     Write-Host ""
     Write-Info "[DRY-RUN] Would download: $DOWNLOAD_URL"
     Write-Info "[DRY-RUN] Install to: $INSTALL_PATH"
+    Write-Info "[DRY-RUN] Mirror: $($MIRROR.DisplayName)"
     Write-Info "[DRY-RUN] Command: $LOCAL_INSTALLER /S /D=$INSTALL_PATH"
     exit 0
 }
@@ -261,14 +326,15 @@ if (-not $cmdHasCondInit) {
     Write-Info "CMD AutoRun already has conda initialize. Skipping."
 }
 
-# Write ~/.condarc with TUNA mirror (only if changed)
+# Write ~/.condarc with selected mirror (only if changed)
+$CLOUD_URL = $MIRROR.CloudUrl
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
 $condarcContent = @"
 channels:
   - conda-forge
 custom_channels:
-  conda-forge: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
-  bioconda: https://mirrors.tuna.tsinghua.edu.cn/anaconda/cloud
+  conda-forge: ${CLOUD_URL}
+  bioconda: ${CLOUD_URL}
 show_channel_urls: true
 "@
 
@@ -280,11 +346,11 @@ if (Test-Path $CONDARC_PATH) {
         $backup = "${CONDARC_PATH}.bak.$([int](Get-Date -UFormat %s))"
         Copy-Item $CONDARC_PATH $backup
         Write-Warn "Existing ~/.condarc backed up to $backup"
-        Write-Info "Writing TUNA mirror config to ~/.condarc..."
+        Write-Info "Writing $($MIRROR.DisplayName) mirror config to ~/.condarc..."
         Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
     }
 } else {
-    Write-Info "Writing TUNA mirror config to ~/.condarc..."
+    Write-Info "Writing $($MIRROR.DisplayName) mirror config to ~/.condarc..."
     Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
 }
 
@@ -310,7 +376,7 @@ Write-Host " Miniconda installed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Location:  $INSTALL_PATH"
 Write-Host "  Version:   $CONDA_VER"
-Write-Host "  Mirror:    TUNA (mirrors.tuna.tsinghua.edu.cn)"
+Write-Host "  Mirror:    $($MIRROR.DisplayName)"
 Write-Host ""
 Write-Host "To activate conda, restart your terminal OR run:"
 Write-Host "  PowerShell:  . `$env:USERPROFILE\Documents\WindowsPowerShell\profile.ps1"
