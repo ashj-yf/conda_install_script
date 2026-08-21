@@ -326,7 +326,7 @@ if (-not $cmdHasCondInit) {
     Write-Info "CMD AutoRun already has conda initialize. Skipping."
 }
 
-# Write ~/.condarc with selected mirror (only if changed)
+# Write ~/.condarc with selected mirror (always overwrite for idempotency)
 $CLOUD_URL = $MIRROR.CloudUrl
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
 $condarcContent = @"
@@ -340,19 +340,16 @@ show_channel_urls: true
 
 if (Test-Path $CONDARC_PATH) {
     $existingContent = (Get-Content $CONDARC_PATH -Raw).Trim()
-    if ($existingContent -eq $condarcContent.Trim()) {
-        Write-Info "~/.condarc already up-to-date. Skipping."
-    } else {
+    if ($existingContent -ne $condarcContent.Trim()) {
         $backup = "${CONDARC_PATH}.bak.$([int](Get-Date -UFormat %s))"
         Copy-Item $CONDARC_PATH $backup
         Write-Warn "Existing ~/.condarc backed up to $backup"
-        Write-Info "Writing $($MIRROR.DisplayName) mirror config to ~/.condarc..."
-        Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
     }
 } else {
-    Write-Info "Writing $($MIRROR.DisplayName) mirror config to ~/.condarc..."
-    Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
+    Write-Info "No existing ~/.condarc found."
 }
+Write-Info "Writing $($MIRROR.DisplayName) mirror config to ~/.condarc (always overwrite)..."
+Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
 
 # Accept Anaconda ToS for default channels (fallback guard; conda >= 24.9 only,
 # older versions lack the subcommand and are silently skipped)

@@ -297,15 +297,17 @@ step 5 "${TOTAL_STEPS}" "Configuring conda..."
 info "Running conda init..."
 "${INSTALL_PATH}/bin/conda" init || warn "conda init reported a warning."
 
-# Write ~/.condarc with selected mirror
+# Write ~/.condarc with selected mirror (always overwrite for idempotency)
 CONDARC_PATH="${HOME}/.condarc"
 if [[ -f "${CONDARC_PATH}" ]]; then
     BACKUP="${CONDARC_PATH}.bak.$(date +%s)"
     cp "${CONDARC_PATH}" "${BACKUP}"
     warn "Existing ~/.condarc backed up to ${BACKUP}"
+else
+    info "No existing ~/.condarc found."
 fi
 
-info "Writing ${MIRROR_DISPLAY_NAME} mirror config to ~/.condarc..."
+info "Writing ${MIRROR_DISPLAY_NAME} mirror config to ~/.condarc (always overwrite)..."
 cat > "${CONDARC_PATH}" << CONDARC
 channels:
   - conda-forge
