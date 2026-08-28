@@ -76,10 +76,10 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
-irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
+iwr https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.ps1 -UseBasicParsing -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('iwr https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_miniconda.ps1 -UseBasicParsing -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 #### Gitee 源（国内推荐）
@@ -98,10 +98,10 @@ bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/scri
 <summary><b>Windows (PowerShell)</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.ps1 -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
+iwr https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.ps1 -UseBasicParsing -OutFile $env:TEMP\install_miniconda.ps1; & $env:TEMP\install_miniconda.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.ps1 -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('iwr https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_miniconda.ps1 -UseBasicParsing -OutFile $env:TEMP\\install_miniconda.ps1; & $env:TEMP\\install_miniconda.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!TIP]
@@ -117,10 +117,10 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_min
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1 -Mirror github
+iwr https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -UseBasicParsing -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1 -Mirror github
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1 -Mirror github').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('iwr https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/install_dev_env.ps1 -UseBasicParsing -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1 -Mirror github').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 #### Gitee 源（国内推荐）
@@ -129,10 +129,10 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/instal
 <summary><b>点击查看命令</b></summary>
 
 ```powershell
-irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1
+iwr https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -UseBasicParsing -OutFile $env:TEMP\install_dev_env.ps1; & $env:TEMP\install_dev_env.ps1
 ```
 
-<p><button onclick="navigator.clipboard.writeText('irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
+<p><button onclick="navigator.clipboard.writeText('iwr https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps1 -UseBasicParsing -OutFile $env:TEMP\\install_dev_env.ps1; & $env:TEMP\\install_dev_env.ps1').then(()=>this.textContent='已复制 ✓').catch(()=>this.textContent='复制失败')">复制命令</button></p>
 </details>
 
 > [!NOTE]
@@ -144,6 +144,8 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/install_dev_env.ps
 > ```powershell
 > Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 > ```
+>
+> 如遇到参数校验类怪异报错（如 `ValidateSetFailure`），通常是下载未成功而执行了 `%TEMP%` 中残留的同名旧脚本——先删除残留再重试：`Remove-Item $env:TEMP\install_*.ps1 -Force`
 
 **安装内容**
 
