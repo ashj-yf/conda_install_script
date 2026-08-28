@@ -114,8 +114,8 @@ $INSTALL_PATH = if ($Path) { $Path } elseif ($env:CONDA_INSTALL_PATH) { $env:CON
 
 # --- Select mirror ---
 $MIRROR_KEY = Select-Mirror
-$MIRROR = $MIRROR_CONFIG[$MIRROR_KEY]
-$MIRROR_BASE_URL = $MIRROR.BaseUrl
+$MirrorConf = $MIRROR_CONFIG[$MIRROR_KEY]
+$MIRROR_BASE_URL = $MirrorConf.BaseUrl
 
 # --- Clean mode ---
 if ($Clean) {
@@ -151,7 +151,7 @@ $INSTALLER_FILENAME = "Miniconda3-latest-${CONDA_OS}-${CONDA_ARCH}.exe"
 $DOWNLOAD_URL = "${MIRROR_BASE_URL}/${INSTALLER_FILENAME}"
 
 Write-Info "OS: ${CONDA_OS}  |  Arch: ${CONDA_ARCH}  |  Installer: ${INSTALLER_FILENAME}"
-Write-Info "Mirror: $($MIRROR.DisplayName)"
+Write-Info "Mirror: $($MirrorConf.DisplayName)"
 
 # ============================================================
 # Step 2: Pre-flight checks
@@ -221,7 +221,7 @@ if ($DryRun) {
     Write-Host ""
     Write-Info "[DRY-RUN] Would download: $DOWNLOAD_URL"
     Write-Info "[DRY-RUN] Install to: $INSTALL_PATH"
-    Write-Info "[DRY-RUN] Mirror: $($MIRROR.DisplayName)"
+    Write-Info "[DRY-RUN] Mirror: $($MirrorConf.DisplayName)"
     Write-Info "[DRY-RUN] Command: $LOCAL_INSTALLER /S /D=$INSTALL_PATH"
     exit 0
 }
@@ -327,7 +327,7 @@ if (-not $cmdHasCondInit) {
 }
 
 # Write ~/.condarc with selected mirror (always overwrite for idempotency)
-$CLOUD_URL = $MIRROR.CloudUrl
+$CLOUD_URL = $MirrorConf.CloudUrl
 $CONDARC_PATH = Join-Path $env:USERPROFILE ".condarc"
 $condarcContent = @"
 channels:
@@ -348,7 +348,7 @@ if (Test-Path $CONDARC_PATH) {
 } else {
     Write-Info "No existing ~/.condarc found."
 }
-Write-Info "Writing $($MIRROR.DisplayName) mirror config to ~/.condarc (always overwrite)..."
+Write-Info "Writing $($MirrorConf.DisplayName) mirror config to ~/.condarc (always overwrite)..."
 Set-Content -Path $CONDARC_PATH -Value $condarcContent -Encoding UTF8
 
 # Accept Anaconda ToS for default channels (fallback guard; conda >= 24.9 only,
@@ -373,7 +373,7 @@ Write-Host " Miniconda installed successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "  Location:  $INSTALL_PATH"
 Write-Host "  Version:   $CONDA_VER"
-Write-Host "  Mirror:    $($MIRROR.DisplayName)"
+Write-Host "  Mirror:    $($MirrorConf.DisplayName)"
 Write-Host ""
 Write-Host "To activate conda, restart your terminal OR run:"
 Write-Host "  PowerShell:  . `$env:USERPROFILE\Documents\WindowsPowerShell\profile.ps1"
