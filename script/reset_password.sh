@@ -8,6 +8,7 @@ readonly RECOMMEND_LENGTH=8
 
 NEW_PASSWORD=""
 RANDOM_MODE=0
+INTERACTIVE_MODE=0
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -33,21 +34,23 @@ Usage: $name [OPTIONS]
 修改 Linux root 账户密码。支持交互输入或参数传参，需 root 权限执行。
 
 Options:
-  -p, --password <pwd>   新密码（省略则交互式输入两次确认）
-  -r, --random           零交互：自动生成 16 位随机密码并直接设置，密码打印在输出中
-      --password=<pwd>   等价的 = 形式传参
-  -h, --help             显示帮助信息
-  -V, --version          显示脚本版本
+  -r, --random            随机密码模式（默认行为，参数仅为显式声明）：自动生成
+                          16 位随机密码并直接设置，密码打印在输出中
+  -p, --password <pwd>    指定新密码
+      --password=<pwd>    等价的 = 形式传参
+  -i, --interactive       交互式输入密码（隐藏回显，输入两次确认）
+  -h, --help              显示帮助信息
+  -V, --version           显示脚本版本
 
 Examples:
-  # 交互式修改 root 密码
+  # 默认：一键随机改密（零交互，密码打印在输出中，请立即保存）
   sudo bash $name
 
   # 参数传密码（可能残留 shell 历史，谨慎使用）
   sudo bash $name --password 'MyP@ss123'
 
-  # 一键随机改密（零交互，密码打印在输出中，请立即保存）
-  sudo bash $name --random
+  # 交互式输入（隐藏回显，不进 shell 历史）
+  sudo bash $name --interactive
 
 Notes:
   - 密码通过 chpasswd 从 stdin 写入，不会出现在进程参数列表中
@@ -81,6 +84,10 @@ while [[ $# -gt 0 ]]; do
             RANDOM_MODE=1
             shift
             ;;
+        -i|--interactive)
+            INTERACTIVE_MODE=1
+            shift
+            ;;
         --password=*)
             NEW_PASSWORD="${1#*=}"
             shift
@@ -108,19 +115,13 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # --- Obtain new password ---
+# 优先级：--password > --interactive > 默认随机
 IS_GENERATED=0
 if [[ -n "$NEW_PASSWORD" ]]; then
     warn "--password 传参可能残留在 shell 历史与进程列表中，建议执行后清理（history -c）"
-elif [[ $RANDOM_MODE -eq 1 ]]; then
-    NEW_PASSWORD="$(gen_random_password 16)"
-    IS_GENERATED=1
-    info "随机模式：已生成 16 位随机密码（零交互，直接设置），请立即复制保存："
-    echo ""
-    echo -e "  ${BOLD}${CYAN}${NEW_PASSWORD}${NC}"
-    echo ""
-else
+elif [[ $INTERACTIVE_MODE -eq 1 ]]; then
     if [[ ! -t 0 ]]; then
-        die "检测到非交互终端，请通过 --password 或 --random 指定密码"
+        die "检测到非交互终端，无法交互输入，请改用 --password 或使用默认随机模式"
     fi
     while true; do
         read -rs -p "请输入新密码: " pass1 || die "密码输入被中断"
@@ -139,6 +140,13 @@ else
         break
     done
     unset pass1 pass2
+else
+    NEW_PASSWORD="$(gen_random_password 16)"
+    IS_GENERATED=1
+    info "已生成 16 位随机密码（零交互，直接设置），请立即复制保存："
+    echo ""
+    echo -e "  ${BOLD}${CYAN}${NEW_PASSWORD}${NC}"
+    echo ""
 fi
 
 # --- Validate ---

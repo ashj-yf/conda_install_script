@@ -4,6 +4,7 @@ param(
     [string]$UserName,
     [string]$Password,
     [switch]$Random,
+    [switch]$Interactive,
     [switch]$Help,
     [switch]$Version
 )
@@ -29,21 +30,22 @@ Usage: $name [OPTIONS]
 修改 Windows 本地账户密码。默认修改当前登录用户，支持交互输入或参数传参。
 
 Options:
-  -UserName <name>   目标本地账户名（默认：当前登录用户）
-  -Password <pwd>    新密码（省略则交互式输入两次确认）
-  -Random            零交互：自动生成 16 位随机密码并直接设置，密码打印在输出中
-  -Help              显示帮助信息
-  -Version           显示脚本版本
+  -UserName <name>    目标本地账户名（默认：当前登录用户）
+  -Random             随机密码模式（默认行为，参数仅为显式声明）
+  -Password <pwd>     指定新密码
+  -Interactive        交互式输入密码（隐藏回显，输入两次确认）
+  -Help               显示帮助信息
+  -Version            显示脚本版本
 
 Examples:
-  # 交互式修改当前用户密码（需管理员 PowerShell）
+  # 默认：一键随机改密（零交互，密码打印在输出中，请立即保存）
   .\$name
 
   # 指定账户并传参密码
   .\$name -UserName administrator -Password 'MyP@ss123'
 
-  # 一键随机改密（零交互，密码打印在输出中，请立即保存）
-  .\$name -Random
+  # 交互式输入（隐藏回显，不进命令历史）
+  .\$name -Interactive
 
 Notes:
   - 必须以管理员身份运行 PowerShell
@@ -103,16 +105,9 @@ function ConvertFrom-SecureToPlain([Security.SecureString]$sec) {
 $isGenerated = $false
 if ($Password) {
     Write-Warn "命令行参数传参的密码可能残留在 PowerShell 历史记录中，建议执行后清理历史"
-} elseif ($Random) {
-    $Password = New-RandomPassword
-    $isGenerated = $true
-    Write-Info "随机模式：已生成 16 位随机密码（零交互，直接设置），请立即复制保存："
-    Write-Host ""
-    Write-Host "  $Password" -ForegroundColor Cyan
-    Write-Host ""
-} else {
+} elseif ($Interactive) {
     if (-not [Environment]::UserInteractive) {
-        Die "当前为非交互环境，无法输入密码，请通过 -Password 或 -Random 参数指定"
+        Die "当前为非交互环境，无法交互输入，请通过 -Password 指定密码或使用默认随机模式"
     }
     while ($true) {
         $sec1 = Read-Host -Prompt "请输入新密码" -AsSecureString
@@ -126,6 +121,13 @@ if ($Password) {
         $Password = $plain1
         break
     }
+} else {
+    $Password = New-RandomPassword
+    $isGenerated = $true
+    Write-Info "已生成 16 位随机密码（零交互，直接设置），请立即复制保存："
+    Write-Host ""
+    Write-Host "  $Password" -ForegroundColor Cyan
+    Write-Host ""
 }
 
 # --- Validate ---
