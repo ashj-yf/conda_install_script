@@ -52,8 +52,10 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/reset_passw
 
 ## reset_password.sh
 ```bash
-sudo bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/reset_password.sh)
+curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/reset_password.sh -o /tmp/reset_password.sh && sudo bash /tmp/reset_password.sh
 ```
+
+> 脚本需交互输入密码，采用先下载后执行的方式（`sudo bash <(curl ...)` 会因 sudo 关闭进程替换的 fd 而失败）。
 
 # GitHub
 
@@ -109,5 +111,7 @@ irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script
 
 ## reset_password.sh
 ```bash
-sudo bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/reset_password.sh)
+curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/reset_password.sh -o /tmp/reset_password.sh && sudo bash /tmp/reset_password.sh
 ```
+
+> 脚本需交互输入密码，采用先下载后执行的方式（`sudo bash <(curl ...)` 会因 sudo 关闭进程替换的 fd 而失败）。
