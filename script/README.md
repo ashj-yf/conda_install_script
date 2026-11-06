@@ -57,6 +57,8 @@ irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_nod
 > ```powershell
 > [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; $f = irm "https://gitee.com/api/v5/repos/ashj-yf/conda_install_script/contents/script/reset_password.ps1?ref=master"; [IO.File]::WriteAllText("$env:TEMP\reset_password.ps1", [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String(($f.content -replace '\s','')))); & "$env:TEMP\reset_password.ps1"
 > ```
+>
+> 随机密码模式（零交互，自动生成 16 位随机密码并直接设置、打印在输出中）：任一命令末尾追加 `-Random` 参数即可。
 
 ## reset_password.sh
 ```bash
@@ -68,6 +70,8 @@ curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/rese
 > ```bash
 > curl -fsSL "https://gitee.com/api/v5/repos/ashj-yf/conda_install_script/contents/script/reset_password.sh?ref=master" | python3 -c "import sys,json,base64;print(base64.b64decode(json.load(sys.stdin)['content']).decode(),end='')" > /tmp/reset_password.sh && sudo bash /tmp/reset_password.sh
 > ```
+>
+> 随机密码模式（零交互，自动生成 16 位随机密码并直接设置、打印在输出中）：任一命令末尾追加 `--random` 参数即可。
 
 # GitHub
 

@@ -32,8 +32,8 @@
 | `install_allure3.ps1` | Windows | Allure 3（npm 全局包 `allure`，需 Node.js） | npmmirror | ✅ |
 | `install_allure.ps1` | Windows | Allure 2（2.45.0，需 Java）+ PATH 配置 | 华为 Maven 镜像 | ❌ 仅单独运行 |
 | `install_miniconda.sh` | Linux / macOS | Miniconda（最新版）+ conda init + 可选镜像源 | 清华/北大镜像 | — |
-| `reset_password.ps1` | Windows | 修改本地账户密码（默认当前用户，`-UserName` 可指定） | — | — |
-| `reset_password.sh` | Linux | 修改 root 密码（chpasswd 实现，stdin 传参） | — | — |
+| `reset_password.ps1` | Windows | 修改本地账户密码（交互 / `-Password` / `-Random` 随机零交互） | — | — |
+| `reset_password.sh` | Linux | 修改 root 密码（交互 / `--password` / `--random` 随机零交互，chpasswd 实现） | — | — |
 
 > **Allure 2 与 Allure 3**：编排器默认安装 **Allure 3**。Allure 2 的脚本 `install_allure.ps1` 仍然保留，可按需单独运行。两者的 CLI 命令名都是 `allure`，同时安装时由 PATH 顺序决定谁生效——`install_allure3.ps1` 会检测这种冲突并给出警告。
 >

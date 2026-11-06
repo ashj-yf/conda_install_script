@@ -7,6 +7,7 @@ readonly MIN_LENGTH=6
 readonly RECOMMEND_LENGTH=8
 
 NEW_PASSWORD=""
+RANDOM_MODE=0
 
 # --- Colors ---
 RED='\033[0;31m'
@@ -33,6 +34,7 @@ Usage: $name [OPTIONS]
 
 Options:
   -p, --password <pwd>   新密码（省略则交互式输入两次确认）
+  -r, --random           零交互：自动生成 16 位随机密码并直接设置，密码打印在输出中
       --password=<pwd>   等价的 = 形式传参
   -h, --help             显示帮助信息
   -V, --version          显示脚本版本
@@ -44,11 +46,27 @@ Examples:
   # 参数传密码（可能残留 shell 历史，谨慎使用）
   sudo bash $name --password 'MyP@ss123'
 
+  # 一键随机改密（零交互，密码打印在输出中，请立即保存）
+  sudo bash $name --random
+
 Notes:
   - 密码通过 chpasswd 从 stdin 写入，不会出现在进程参数列表中
   - chpasswd 不走 PAM 复杂度策略校验，脚本内置基础长度校验
   - 密码不能包含换行符
 EOF
+}
+
+# --- Random password generator ---
+gen_random_password() {
+    local length="${1:-16}" out
+    # 去除易混淆字符（0O1lI），避开 shell/引号歧义字符；'-' 置于字符集末尾避免被解析为范围
+    # head 先取定长样本再交给 tr（管道顺序保证 tr 正常读到 EOF，不会触发 SIGPIPE）
+    # LC_ALL=C 强制按字节处理（BSD/GNU tr 在多字节 locale 下会对随机字节流报 Illegal byte sequence）
+    out="$(head -c 1024 /dev/urandom | LC_ALL=C tr -dc 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#%^*_-')" || true
+    if [[ ${#out} -lt $length ]]; then
+        die "随机密码生成失败（随机源输出不足），请重试"
+    fi
+    printf '%s' "${out:0:$length}"
 }
 
 # --- Parse args ---
@@ -58,6 +76,10 @@ while [[ $# -gt 0 ]]; do
             [[ -n "${2:-}" ]] || die "--password 需要一个密码参数"
             NEW_PASSWORD="$2"
             shift 2
+            ;;
+        -r|--random)
+            RANDOM_MODE=1
+            shift
             ;;
         --password=*)
             NEW_PASSWORD="${1#*=}"
@@ -86,9 +108,19 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 # --- Obtain new password ---
-if [[ -z "$NEW_PASSWORD" ]]; then
+IS_GENERATED=0
+if [[ -n "$NEW_PASSWORD" ]]; then
+    warn "--password 传参可能残留在 shell 历史与进程列表中，建议执行后清理（history -c）"
+elif [[ $RANDOM_MODE -eq 1 ]]; then
+    NEW_PASSWORD="$(gen_random_password 16)"
+    IS_GENERATED=1
+    info "随机模式：已生成 16 位随机密码（零交互，直接设置），请立即复制保存："
+    echo ""
+    echo -e "  ${BOLD}${CYAN}${NEW_PASSWORD}${NC}"
+    echo ""
+else
     if [[ ! -t 0 ]]; then
-        die "检测到非交互终端，请通过 --password 传入密码"
+        die "检测到非交互终端，请通过 --password 或 --random 指定密码"
     fi
     while true; do
         read -rs -p "请输入新密码: " pass1 || die "密码输入被中断"
@@ -107,8 +139,6 @@ if [[ -z "$NEW_PASSWORD" ]]; then
         break
     done
     unset pass1 pass2
-else
-    warn "--password 传参可能残留在 shell 历史与进程列表中，建议执行后清理（history -c）"
 fi
 
 # --- Validate ---
@@ -127,7 +157,7 @@ if [[ "$NEW_PASSWORD" =~ [[:upper:]] ]];  then classes=$((classes + 1)); fi
 if [[ "$NEW_PASSWORD" =~ [[:lower:]] ]];  then classes=$((classes + 1)); fi
 if [[ "$NEW_PASSWORD" =~ [[:digit:]] ]];  then classes=$((classes + 1)); fi
 if [[ "$NEW_PASSWORD" =~ [^[:alnum:]] ]]; then classes=$((classes + 1)); fi
-if [[ ${#NEW_PASSWORD} -lt $RECOMMEND_LENGTH || $classes -lt 3 ]]; then
+if [[ $IS_GENERATED -ne 1 && ( ${#NEW_PASSWORD} -lt $RECOMMEND_LENGTH || $classes -lt 3 ) ]]; then
     warn "密码强度较弱（长度 ${#NEW_PASSWORD}，含 ${classes} 类字符），建议至少 ${RECOMMEND_LENGTH} 位且包含大小写/数字/特殊字符中的三类"
 fi
 

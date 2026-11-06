@@ -3,6 +3,7 @@
 param(
     [string]$UserName,
     [string]$Password,
+    [switch]$Random,
     [switch]$Help,
     [switch]$Version
 )
@@ -30,6 +31,7 @@ Usage: $name [OPTIONS]
 Options:
   -UserName <name>   目标本地账户名（默认：当前登录用户）
   -Password <pwd>    新密码（省略则交互式输入两次确认）
+  -Random            零交互：自动生成 16 位随机密码并直接设置，密码打印在输出中
   -Help              显示帮助信息
   -Version           显示脚本版本
 
@@ -39,6 +41,9 @@ Examples:
 
   # 指定账户并传参密码
   .\$name -UserName administrator -Password 'MyP@ss123'
+
+  # 一键随机改密（零交互，密码打印在输出中，请立即保存）
+  .\$name -Random
 
 Notes:
   - 必须以管理员身份运行 PowerShell
@@ -80,6 +85,14 @@ if (-not $targetUser) {
     Die "目标账户不存在: $UserName"
 }
 
+# --- Random password ---
+function New-RandomPassword([int]$Length = 16) {
+    # 去除易混淆字符（0O1lI），避开 shell/引号歧义字符；Get-Random 使用加密安全随机源
+    $charset = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#%^*_-"
+    $chars = $charset.ToCharArray()
+    return -join (1..$Length | ForEach-Object { $chars[(Get-Random -Maximum $chars.Count)] })
+}
+
 # --- Obtain new password ---
 function ConvertFrom-SecureToPlain([Security.SecureString]$sec) {
     $bstr = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)
@@ -87,11 +100,19 @@ function ConvertFrom-SecureToPlain([Security.SecureString]$sec) {
     finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($bstr) }
 }
 
+$isGenerated = $false
 if ($Password) {
     Write-Warn "命令行参数传参的密码可能残留在 PowerShell 历史记录中，建议执行后清理历史"
+} elseif ($Random) {
+    $Password = New-RandomPassword
+    $isGenerated = $true
+    Write-Info "随机模式：已生成 16 位随机密码（零交互，直接设置），请立即复制保存："
+    Write-Host ""
+    Write-Host "  $Password" -ForegroundColor Cyan
+    Write-Host ""
 } else {
     if (-not [Environment]::UserInteractive) {
-        Die "当前为非交互环境，无法输入密码，请通过 -Password 参数传入"
+        Die "当前为非交互环境，无法输入密码，请通过 -Password 或 -Random 参数指定"
     }
     while ($true) {
         $sec1 = Read-Host -Prompt "请输入新密码" -AsSecureString
@@ -120,7 +141,7 @@ if ($Password -cmatch '[A-Z]')       { $classes++ }
 if ($Password -cmatch '[a-z]')       { $classes++ }
 if ($Password -match '\d')           { $classes++ }
 if ($Password -match '[^A-Za-z0-9]') { $classes++ }
-if ($Password.Length -lt $RECOMMEND_LENGTH -or $classes -lt 3) {
+if (-not $isGenerated -and ($Password.Length -lt $RECOMMEND_LENGTH -or $classes -lt 3)) {
     Write-Warn "密码强度较弱（长度 $($Password.Length)，含 $classes 类字符），建议至少 $RECOMMEND_LENGTH 位且包含大小写/数字/特殊字符中的三类（若系统密码策略更严格，以系统校验结果为准）"
 }
 
