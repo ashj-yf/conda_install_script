@@ -166,4 +166,16 @@ try {
 Write-Host ""
 Write-Info "密码修改完成"
 Write-Host "  目标账户: $UserName" -ForegroundColor White
+
+# --- Record password to file ---
+# 在当前工作目录生成 password_主机_账户_时间戳.txt
+try {
+    $recordFile = Join-Path (Get-Location).Path ("password_{0}_{1}_{2}.txt" -f $env:COMPUTERNAME, $UserName, (Get-Date -Format "yyyyMMdd-HHmmss"))
+    $recordContent = "主机: $env:COMPUTERNAME`r`n账户: $UserName`r`n新密码: $Password`r`n时间: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')"
+    Set-Content -Path $recordFile -Value $recordContent -Encoding UTF8
+    Write-Info "密码已记录到: $recordFile（请妥善保管，勿提交到代码仓库）"
+} catch {
+    Write-Warn "密码记录文件写入失败: $($_.Exception.Message)（密码仅在上方输出中）"
+}
+
 Write-Info "请妥善保管新密码，并同步更新使用该账户的凭据（计划任务、服务、远程桌面保存的凭据等）"

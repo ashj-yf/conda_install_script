@@ -189,5 +189,15 @@ else
     warn "无法从 /etc/shadow 确认密码状态，建议手动验证登录"
 fi
 
+# --- Record password to file ---
+# 在当前工作目录生成 password_主机_账户_时间戳.txt（umask 077 保证权限 600）
+record_file="$(pwd)/password_$(hostname)_${TARGET_USER}_$(date +%Y%m%d-%H%M%S).txt"
+if ( umask 077 && printf '主机: %s\n账户: %s\n新密码: %s\n时间: %s\n' \
+        "$(hostname)" "$TARGET_USER" "$NEW_PASSWORD" "$(date '+%Y-%m-%d %H:%M:%S')" > "$record_file" ); then
+    info "密码已记录到: $record_file（权限 600，请妥善保管，勿提交到代码仓库）"
+else
+    warn "密码记录文件写入失败（当前目录不可写？），密码仅在上方输出中"
+fi
+
 unset NEW_PASSWORD
 info "完成。请妥善保管新密码；SSH 密钥登录不受影响，密码登录请重新测试"
