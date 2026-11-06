@@ -143,11 +143,12 @@ else
 fi
 
 # --- Verify ---
-status_line="$(passwd -S "$TARGET_USER" 2>/dev/null || true)"
-if [[ "$(echo "$status_line" | awk '{print $2}')" == "P" ]]; then
-    info "验证通过：${TARGET_USER} 密码状态为已设置 (P)"
+# 直接读取 /etc/shadow 密码字段校验（root 下必然可读，不依赖 passwd -S 的系统支持）
+shadow_hash="$(awk -F: -v u="$TARGET_USER" '$1 == u {print $2}' /etc/shadow 2>/dev/null || true)"
+if [[ -n "$shadow_hash" && "$shadow_hash" != '!'* && "$shadow_hash" != '*'* ]]; then
+    info "验证通过：${TARGET_USER} 密码哈希已写入 /etc/shadow"
 else
-    warn "无法通过 passwd -S 确认密码状态，建议手动验证登录"
+    warn "无法从 /etc/shadow 确认密码状态，建议手动验证登录"
 fi
 
 unset NEW_PASSWORD
