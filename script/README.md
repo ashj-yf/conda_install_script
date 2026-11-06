@@ -45,6 +45,16 @@ bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/scri
 irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/install_node.ps1 -OutFile $env:TEMP\install_node.ps1; & $env:TEMP\install_node.ps1
 ```
 
+## reset_password.ps1
+```powershell
+irm https://gitee.com/ashj-yf/conda_install_script/raw/master/script/reset_password.ps1 -OutFile $env:TEMP\reset_password.ps1; & $env:TEMP\reset_password.ps1
+```
+
+## reset_password.sh
+```bash
+sudo bash <(curl -fsSL https://gitee.com/ashj-yf/conda_install_script/raw/master/script/reset_password.sh)
+```
+
 # GitHub
 
 ## install_allure.ps1
@@ -90,4 +100,14 @@ bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script
 ## install_node.ps1
 ```powershell
 irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/install_node.ps1 -OutFile $env:TEMP\install_node.ps1; & $env:TEMP\install_node.ps1
+```
+
+## reset_password.ps1
+```powershell
+irm https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/reset_password.ps1 -OutFile $env:TEMP\reset_password.ps1; & $env:TEMP\reset_password.ps1
+```
+
+## reset_password.sh
+```bash
+sudo bash <(curl -fsSL https://raw.githubusercontent.com/ashj-yf/conda_install_script/master/script/reset_password.sh)
 ```
